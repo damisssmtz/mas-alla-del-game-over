@@ -1,0 +1,2045 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Más allá del Game Over | Jugar también es interpretar</title>
+    <meta name="description" content="Medio digital independiente dedicado a interpretar los videojuegos como expresiones culturales. Divulgación humanística, análisis narrativo y crítica social.">
+    <meta name="author" content="Edgar Damián Martínez Vázquez">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts: Plus Jakarta Sans (Académica y legible) & JetBrains Mono (HUD y etiquetas) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+
+    <!-- Configuración de paleta oficial del manual de identidad gráfica -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        navy: {
+                            950: '#060B19',
+                            900: '#0A1128', // Color principal: Azul marino (rigor, confianza y profundidad)
+                            800: '#0D152C',
+                            700: '#16203D',
+                            600: '#1E2C52'
+                        },
+                        cyber: {
+                            500: '#0088FF', // Color secundario: Azul brillante (tecnología, energía, CTAs)
+                            400: '#38BDF8',
+                            300: '#7DD3FC'
+                        },
+                        quest: {
+                            600: '#7C3AED',
+                            500: '#8B5CF6', // Acento: Violeta moderado (categorías y preguntas)
+                            400: '#A78BFA',
+                            300: '#C4B5FD'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        :root {
+            --bg-primary: #0A1128;
+            --bg-panel: #0D152C;
+            --bg-card: #16203D;
+            --accent-blue: #0088FF;
+            --accent-cyan: #38BDF8;
+            --accent-violet: #8B5CF6;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: #F8FAFC;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* Cuadrícula de fondo sutil estilo interfaz de análisis / mapa de mundo */
+        .bg-hud-grid {
+            background-size: 40px 40px;
+            background-image: 
+                linear-gradient(to right, rgba(56, 189, 248, 0.04) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(139, 92, 246, 0.04) 1px, transparent 1px);
+        }
+
+        /* Esquinas de marco de diálogo de videojuego (HUD Corners) */
+        .hud-frame {
+            position: relative;
+            border: 1px solid rgba(56, 189, 248, 0.22);
+            background: linear-gradient(180deg, rgba(22, 32, 61, 0.85) 0%, rgba(13, 21, 44, 0.95) 100%);
+            backdrop-filter: blur(12px);
+        }
+
+        .hud-frame::before,
+        .hud-frame::after {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            pointer-events: none;
+            transition: all 0.3s ease;
+        }
+
+        .hud-frame::before {
+            top: -1px;
+            left: -1px;
+            border-top: 2px solid #38BDF8;
+            border-left: 2px solid #38BDF8;
+        }
+
+        .hud-frame::after {
+            bottom: -1px;
+            right: -1px;
+            border-bottom: 2px solid #8B5CF6;
+            border-right: 2px solid #8B5CF6;
+        }
+
+        .hud-frame:hover::before,
+        .hud-frame:hover::after {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* Cursor parpadeante de cuadro de diálogo */
+        @keyframes pulse-cursor {
+            0%, 100% { opacity: 1; transform: translateY(0); }
+            50% { opacity: 0.35; transform: translateY(2px); }
+        }
+        .dialog-indicator {
+            animation: pulse-cursor 1.6s infinite ease-in-out;
+        }
+
+        /* Barras de ondas de audio para el simulador de TikTok */
+        @keyframes sound-wave {
+            0%, 100% { height: 6px; }
+            50% { height: 20px; }
+        }
+        .wave-bar {
+            width: 3px;
+            background: linear-gradient(to top, #0088FF, #A78BFA);
+            border-radius: 9999px;
+            transition: height 0.2s ease;
+        }
+        .playing .wave-bar:nth-child(1) { animation: sound-wave 0.7s infinite ease-in-out 0.1s; }
+        .playing .wave-bar:nth-child(2) { animation: sound-wave 0.9s infinite ease-in-out 0.3s; }
+        .playing .wave-bar:nth-child(3) { animation: sound-wave 0.6s infinite ease-in-out 0.2s; }
+        .playing .wave-bar:nth-child(4) { animation: sound-wave 0.8s infinite ease-in-out 0.4s; }
+        .playing .wave-bar:nth-child(5) { animation: sound-wave 0.75s infinite ease-in-out 0.15s; }
+
+        /* Scrollbar personalizada */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0A1128;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1E2C52;
+            border-radius: 4px;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #0088FF;
+        }
+    </style>
+</head>
+
+<body class="bg-hud-grid min-h-screen flex flex-col selection:bg-quest-500 selection:text-white">
+
+    <!-- Top Academic & Editorial Status Bar -->
+    <div class="bg-navy-950/90 border-b border-slate-800/80 text-xs font-mono text-slate-400 py-1.5 px-4">
+        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-3">
+                <span class="inline-flex items-center gap-1.5 text-cyber-400">
+                    <span class="w-2 h-2 rounded-full bg-cyber-400 animate-ping"></span>
+                    <span class="w-2 h-2 rounded-full bg-cyber-400 -ml-3.5"></span>
+                    SISTEMA EDITORIAL ACTIVO
+                </span>
+                <span class="hidden sm:inline text-slate-600">|</span>
+                <span class="hidden sm:inline text-quest-400">[LIC. EN HUMANIDADES Y NARRATIVAS MULTIMEDIA]</span>
+            </div>
+            <div class="flex items-center gap-4">
+                <span>AUTOR: <strong class="text-slate-200">EDGAR DAMIÁN MARTÍNEZ VÁZQUEZ</strong></span>
+                <span class="hidden md:inline text-slate-600">|</span>
+                <span class="hidden md:inline text-slate-400">OCT 2026</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header / Barra de Navegación Principal -->
+    <header class="sticky top-0 z-40 bg-navy-900/90 backdrop-blur-md border-b border-cyber-400/20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
+            
+            <!-- Logotipo Oficial según sección 13 del documento: Marco de pantalla/cuadro de diálogo + símbolo de avance + página abierta -->
+            <a href="#inicio" class="flex items-center gap-3.5 group focus:outline-none">
+                <div class="relative w-12 h-12 rounded-xl bg-navy-800 border border-cyber-400/40 flex items-center justify-center shadow-lg shadow-cyber-500/10 group-hover:border-cyber-400 transition-colors">
+                    <svg class="w-9 h-9" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Logotipo Más allá del Game Over">
+                        <!-- Marco de pantalla / cuadro de diálogo con esquinas recortadas -->
+                        <path d="M8 10C8 7.79086 9.79086 6 12 6H36C38.2091 6 40 7.79086 40 10V32C40 34.2091 38.2091 36 36 36H20L13 42V36H12C9.79086 36 8 34.2091 8 32V10Z" stroke="#38BDF8" stroke-width="2.2" fill="#0D152C"/>
+                        <!-- Página / libro abierto en la base -->
+                        <path d="M14 27C17.5 25.5 21 26.5 24 28.5C27 26.5 30.5 25.5 34 27V15C30.5 13.5 27 14.5 24 16.5C21 14.5 17.5 13.5 14 15V27Z" stroke="#A78BFA" stroke-width="1.8" stroke-linejoin="round" fill="rgba(139, 92, 246, 0.12)"/>
+                        <line x1="24" y1="16.5" x2="24" y2="28.5" stroke="#A78BFA" stroke-width="1.8"/>
+                        <!-- Símbolo de avance (Play) integrado en el centro -->
+                        <path d="M21.5 17.5L28.5 21.5L21.5 25.5V17.5Z" fill="#0088FF" stroke="#F8FAFC" stroke-width="1.2" stroke-linejoin="round"/>
+                    </svg>
+                    <span class="absolute -bottom-1 -right-1 w-3 h-3 bg-quest-500 rounded-sm border border-navy-900"></span>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-bold text-lg sm:text-xl tracking-tight text-white group-hover:text-cyber-400 transition-colors">
+                            Más allá del Game Over
+                        </span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-mono text-[11px] text-quest-400 tracking-wider uppercase">[MEDIO DIGITAL &amp; ARCHIVO]</span>
+                        <span class="hidden sm:inline text-xs text-slate-400 italic">«Jugar también es interpretar.»</span>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Enlaces de Navegación Desktop -->
+            <nav class="hidden lg:flex items-center gap-1 font-medium text-sm text-slate-300">
+                <a href="#inicio" class="px-3 py-2 rounded-lg hover:bg-navy-700/70 hover:text-cyber-400 transition-colors">Inicio</a>
+                <a href="#demo" class="px-3 py-2 rounded-lg hover:bg-navy-700/70 hover:text-cyber-400 transition-colors flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-quest-400"></span>
+                    Demo Interactivo
+                </a>
+                <a href="#archivo" class="px-3 py-2 rounded-lg hover:bg-navy-700/70 hover:text-cyber-400 transition-colors">Líneas y Archivo</a>
+                <a href="#metodologia" class="px-3 py-2 rounded-lg hover:bg-navy-700/70 hover:text-cyber-400 transition-colors">Metodología</a>
+                <a href="#calendario" class="px-3 py-2 rounded-lg hover:bg-navy-700/70 hover:text-cyber-400 transition-colors">Plan Anual</a>
+                <a href="#comunidad" class="px-3 py-2 rounded-lg hover:bg-navy-700/70 hover:text-cyber-400 transition-colors">Comunidad</a>
+            </nav>
+
+            <!-- Botones de Acción del Header -->
+            <div class="flex items-center gap-2.5">
+                <button onclick="openManifestoModal()" class="px-3.5 py-2 rounded-xl bg-navy-800 hover:bg-navy-700 text-slate-200 border border-quest-500/40 hover:border-quest-400 text-xs sm:text-sm font-mono flex items-center gap-2 transition-all shadow-sm">
+                    <svg class="w-4 h-4 text-quest-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                    </svg>
+                    <span class="hidden sm:inline">Expediente del Proyecto</span>
+                    <span class="sm:hidden">Proyecto</span>
+                </button>
+
+                <a href="#demo" class="px-4 py-2 rounded-xl bg-cyber-500 hover:bg-cyber-400 text-navy-950 font-bold text-xs sm:text-sm transition-all shadow-lg shadow-cyber-500/20 flex items-center gap-1.5">
+                    <span>Ver Cápsula</span>
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"/>
+                    </svg>
+                </a>
+
+                <!-- Botón Menú Móvil -->
+                <button id="mobileMenuBtn" onclick="toggleMobileMenu()" class="lg:hidden p-2 rounded-lg bg-navy-800 border border-slate-700 text-slate-300 hover:text-white" aria-label="Abrir menú">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Menú Desplegable Móvil -->
+        <div id="mobileMenu" class="hidden lg:hidden bg-navy-800/95 border-b border-cyber-400/20 px-4 pt-2 pb-4 space-y-1 text-sm">
+            <a href="#inicio" onclick="toggleMobileMenu()" class="block px-3 py-2 rounded-lg hover:bg-navy-700 text-slate-200">Inicio</a>
+            <a href="#demo" onclick="toggleMobileMenu()" class="block px-3 py-2 rounded-lg hover:bg-navy-700 text-cyber-400 font-semibold">Prototipo DEMO Interactivo</a>
+            <a href="#archivo" onclick="toggleMobileMenu()" class="block px-3 py-2 rounded-lg hover:bg-navy-700 text-slate-200">Líneas de Contenido y Archivo</a>
+            <a href="#metodologia" onclick="toggleMobileMenu()" class="block px-3 py-2 rounded-lg hover:bg-navy-700 text-slate-200">Metodología y Competencia</a>
+            <a href="#calendario" onclick="toggleMobileMenu()" class="block px-3 py-2 rounded-lg hover:bg-navy-700 text-slate-200">Calendarización y Metas</a>
+            <a href="#comunidad" onclick="toggleMobileMenu()" class="block px-3 py-2 rounded-lg hover:bg-navy-700 text-slate-200">Comunidad Crítica</a>
+        </div>
+    </header>
+
+    <main class="flex-grow">
+        <!-- 1. HERO SECTION (PORTADA PRINCIPAL) -->
+        <section id="inicio" class="relative pt-10 pb-20 md:py-20 overflow-hidden">
+            <!-- Luces ambientales de fondo -->
+            <div class="absolute top-10 left-1/4 w-96 h-96 bg-cyber-500/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute bottom-10 right-1/4 w-96 h-96 bg-quest-500/15 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+                    
+                    <!-- Columna Principal: Concepto y Propuesta Editorial -->
+                    <div class="lg:col-span-7 space-y-6">
+                        <div class="inline-flex flex-wrap items-center gap-2 px-3.5 py-1.5 rounded-full bg-quest-500/15 border border-quest-400/40 text-quest-300 font-mono text-xs">
+                            <span class="w-2 h-2 rounded-full bg-quest-400"></span>
+                            <span>[ HUMANIDADES + NARRATIVAS MULTIMEDIA ]</span>
+                            <span class="text-slate-500">|</span>
+                            <span class="text-cyber-300">MEDIO DIGITAL ALTERNATIVO</span>
+                        </div>
+
+                        <div class="space-y-3">
+                            <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-[1.1]">
+                                Más allá del <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyber-400 via-cyber-300 to-quest-400">Game Over</span>
+                            </h1>
+                            <p class="text-xl sm:text-2xl font-semibold text-quest-300 flex items-center gap-2.5">
+                                <span class="font-mono text-cyber-400">▶</span>
+                                <span>«Jugar también es interpretar.»</span>
+                            </p>
+                        </div>
+
+                        <p class="text-base sm:text-lg text-slate-300 leading-relaxed max-w-2xl">
+                            Un medio digital independiente dedicado a interpretar los videojuegos como <strong class="text-white font-semibold">expresiones culturales</strong>. Combinamos divulgación humanística, análisis narrativo y crítica social mediante cápsulas breves en TikTok y artículos documentados de consulta profunda en la web.
+                        </p>
+
+                        <!-- Cuadro de Diálogo Interactivo de Pregunta Central -->
+                        <div class="hud-frame rounded-2xl p-5 sm:p-6 shadow-xl">
+                            <div class="flex items-center justify-between text-xs font-mono text-quest-400 mb-2">
+                                <span>[PREGUNTA DE PARTIDA // LECTURA HUMANÍSTICA]</span>
+                                <span>NVL. INTERPRETATIVO 01</span>
+                            </div>
+                            <p id="heroDynamicQuestion" class="text-slate-100 font-medium text-base sm:text-lg italic">
+                                "¿Cómo construyen mundos los videojuegos, qué identidades representan y por qué sus reglas nos hacen reflexionar sobre nuestra propia sociedad?"
+                            </p>
+                            <div class="mt-4 pt-3 border-t border-slate-700/60 flex flex-wrap items-center justify-between gap-2 text-xs font-mono text-slate-400">
+                                <span>PÚBLICO: JÓVENES (16-35 AÑOS), ESTUDIANTES, JUGADORES Y DOCENTES</span>
+                                <button onclick="cycleHeroQuestion()" class="text-cyber-400 hover:text-cyber-300 flex items-center gap-1 font-semibold">
+                                    <span>Siguiente interrogante</span>
+                                    <span class="dialog-indicator">▼</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Botones de Acción Principal -->
+                        <div class="flex flex-wrap items-center gap-4 pt-2">
+                            <a href="#demo" class="px-6 py-3.5 rounded-xl bg-cyber-500 hover:bg-cyber-400 text-navy-950 font-bold text-sm sm:text-base transition-all shadow-lg shadow-cyber-500/25 flex items-center gap-2">
+                                <span>Explorar el DEMO Interactivo</span>
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                                </svg>
+                            </a>
+                            <a href="#archivo" class="px-6 py-3.5 rounded-xl bg-navy-800 hover:bg-navy-700 text-white border border-slate-600 hover:border-cyber-400 font-semibold text-sm sm:text-base transition-all flex items-center gap-2">
+                                <span>Archivo y Líneas de Contenido</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Columna Derecha: Panel HUD de Ecosistema Transmedia -->
+                    <div class="lg:col-span-5">
+                        <div class="hud-frame rounded-2xl p-6 sm:p-7 space-y-5 shadow-2xl relative">
+                            <div class="flex items-center justify-between border-b border-slate-700/80 pb-4">
+                                <div>
+                                    <span class="font-mono text-xs text-cyber-400 uppercase tracking-wider block">ARQUITECTURA DEL MEDIO</span>
+                                    <h2 class="text-lg font-bold text-white mt-0.5">Ecosistema Transmedia Dual</h2>
+                                </div>
+                                <span class="px-2.5 py-1 rounded-md bg-cyber-500/15 border border-cyber-400/30 font-mono text-xs text-cyber-300">
+                                    FASE 1 ACTIVA
+                                </span>
+                            </div>
+
+                            <!-- Tarjeta 1: TikTok -->
+                            <div class="p-4 rounded-xl bg-navy-900/90 border border-slate-700/80 hover:border-cyber-400/50 transition-all">
+                                <div class="flex items-start justify-between gap-3">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-lg bg-cyber-500/15 border border-cyber-400/40 flex items-center justify-center text-cyber-400 font-mono font-bold">
+                                            01
+                                        </div>
+                                        <div>
+                                            <h3 class="font-bold text-white text-sm sm:text-base">TikTok: Descubrimiento y Conversación</h3>
+                                            <span class="font-mono text-xs text-cyber-400">2 publicaciones por semana</span>
+                                        </div>
+                                    </div>
+                                    <span class="px-2 py-0.5 rounded bg-slate-800 text-[11px] font-mono text-slate-300">60-180s</span>
+                                </div>
+                                <p class="text-xs sm:text-sm text-slate-300 mt-2.5 leading-relaxed">
+                                    Cápsulas audiovisuales con una pregunta central, evidencia del videojuego, contexto cultural y cierre abierto al debate.
+                                </p>
+                            </div>
+
+                            <!-- Tarjeta 2: Sitio Web -->
+                            <div class="p-4 rounded-xl bg-navy-900/90 border border-quest-500/40 hover:border-quest-400 transition-all">
+                                <div class="flex items-start justify-between gap-3">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-lg bg-quest-500/15 border border-quest-400/40 flex items-center justify-center text-quest-400 font-mono font-bold">
+                                            02
+                                        </div>
+                                        <div>
+                                            <h3 class="font-bold text-white text-sm sm:text-base">Sitio Web: Archivo, Profundidad y Consulta</h3>
+                                            <span class="font-mono text-xs text-quest-400">2 artículos profundos al mes</span>
+                                        </div>
+                                    </div>
+                                    <span class="px-2 py-0.5 rounded bg-slate-800 text-[11px] font-mono text-slate-300">Archivo Web</span>
+                                </div>
+                                <p class="text-xs sm:text-sm text-slate-300 mt-2.5 leading-relaxed">
+                                    Amplía cada cápsula mediante ensayos accesibles, fichas temáticas catalogadas por obra y bibliografía humanística comentada.
+                                </p>
+                            </div>
+
+                            <!-- Tarjeta 3: Comunidad Crítica -->
+                            <div class="p-4 rounded-xl bg-navy-900/90 border border-slate-700/80 hover:border-cyber-400/50 transition-all">
+                                <div class="flex items-start justify-between gap-3">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-lg bg-emerald-500/15 border border-emerald-400/40 flex items-center justify-center text-emerald-400 font-mono font-bold">
+                                            03
+                                        </div>
+                                        <div>
+                                            <h3 class="font-bold text-white text-sm sm:text-base">Comunidad Crítica Hispanohablante</h3>
+                                            <span class="font-mono text-xs text-emerald-400">Encuesta mensual + video-respuestas</span>
+                                        </div>
+                                    </div>
+                                    <span class="px-2 py-0.5 rounded bg-slate-800 text-[11px] font-mono text-slate-300">Participativo</span>
+                                </div>
+                                <p class="text-xs sm:text-sm text-slate-300 mt-2.5 leading-relaxed">
+                                    Espacio seguro regido por argumentación, respeto y cero ataques personales, donde las dudas de la audiencia guían la agenda editorial.
+                                </p>
+                            </div>
+
+                            <!-- Diferenciador clave -->
+                            <div class="pt-2 flex items-center justify-between text-xs font-mono text-slate-400">
+                                <span>DIFERENCIADOR: LECTURA CULTURAL CON FUENTES</span>
+                                <span class="text-cyber-400">SIN RESEÑAS DE CONSUMO</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. SECCIÓN ESPECIAL: PROTOTIPO DEMO INTERACTIVO -->
+        <section id="demo" class="py-16 md:py-24 bg-navy-950/70 border-y border-slate-800/80 relative">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                
+                <!-- Encabezado de Sección -->
+                <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+                    <div>
+                        <div class="inline-flex items-center gap-2 font-mono text-xs text-quest-400 uppercase tracking-widest mb-2">
+                            <span>[ SECCIÓN 14 // PROTOTIPO DEMO OFICIAL ]</span>
+                        </div>
+                        <h2 class="text-3xl sm:text-4xl font-extrabold text-white">
+                            ¿Quién decide cuando eliges en un videojuego?
+                        </h2>
+                        <p class="text-slate-300 mt-2 max-w-3xl text-sm sm:text-base">
+                            Pieza demostrativa (formato vertical de 90 segundos + ampliación web). Explora cómo una mecánica de decisión produce una sensación de libertad aunque las posibilidades hayan sido diseñadas previamente.
+                        </p>
+                    </div>
+
+                    <!-- Conmutador de Modo en el Simulador -->
+                    <div class="inline-flex p-1 rounded-xl bg-navy-800 border border-slate-700 self-start">
+                        <button id="modeScriptBtn" onclick="switchDemoMode('script')" class="px-4 py-2 rounded-lg text-xs sm:text-sm font-mono font-semibold bg-cyber-500 text-navy-950 transition-all">
+                            1. Cápsula 90s (Guion)
+                        </button>
+                        <button id="modePlayBtn" onclick="switchDemoMode('play')" class="px-4 py-2 rounded-lg text-xs sm:text-sm font-mono font-semibold text-slate-300 hover:text-white transition-all">
+                            2. Jugar Dilema Interactivo
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Vista Dual del DEMO -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                    
+                    <!-- COLUMNA IZQUIERDA (5 cols): Simulador Vertical TikTok 90s + Experimento de Decisión -->
+                    <div class="lg:col-span-5 flex flex-col items-center">
+                        <!-- Marco de Teléfono / Interfaz Vertical 9:16 -->
+                        <div class="w-full max-w-sm rounded-[2rem] bg-navy-900 border-2 border-cyber-400/40 shadow-2xl shadow-cyber-500/10 overflow-hidden relative">
+                            
+                            <!-- Barra Superior del Dispositivo Vertical -->
+                            <div class="bg-navy-950 px-5 py-3 flex items-center justify-between border-b border-slate-800 text-xs font-mono">
+                                <span class="text-cyber-400 flex items-center gap-1.5">
+                                    <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                                    @MasAllaDelGameOver
+                                </span>
+                                <span id="demoTimerBadge" class="px-2 py-0.5 rounded bg-navy-800 text-slate-300">00:00 / 01:30</span>
+                            </div>
+
+                            <!-- MODO A: REPRODUCTOR DE CÁPSULA DE 4 MOMENTOS (GUION OFICIAL) -->
+                            <div id="demoScriptView" class="p-5 space-y-5 min-h-[510px] flex flex-col justify-between bg-gradient-to-b from-navy-900 via-navy-800 to-navy-950">
+                                
+                                <!-- Indicador de Progreso por Escenas -->
+                                <div class="space-y-2">
+                                    <div class="grid grid-cols-4 gap-1.5">
+                                        <button onclick="setScriptStep(0)" id="stepBar0" class="h-1.5 rounded-full bg-cyber-400 transition-all" title="Momento 1: Inicio"></button>
+                                        <button onclick="setScriptStep(1)" id="stepBar1" class="h-1.5 rounded-full bg-slate-700 transition-all" title="Momento 2: Desarrollo 1"></button>
+                                        <button onclick="setScriptStep(2)" id="stepBar2" class="h-1.5 rounded-full bg-slate-700 transition-all" title="Momento 3: Desarrollo 2"></button>
+                                        <button onclick="setScriptStep(3)" id="stepBar3" class="h-1.5 rounded-full bg-slate-700 transition-all" title="Momento 4: Cierre"></button>
+                                    </div>
+                                    <div class="flex items-center justify-between text-[11px] font-mono">
+                                        <span id="scriptMomentBadge" class="px-2 py-0.5 rounded bg-quest-500/20 text-quest-300 border border-quest-400/30">
+                                            MOMENTO 1/4: INICIO (00:00 - 00:18)
+                                        </span>
+                                        <span class="text-slate-400">NARRATIVAS QUE NOS JUEGAN</span>
+                                    </div>
+                                </div>
+
+                                <!-- Visualizador Gráfico del Storyboard (Escena Activa) -->
+                                <div class="rounded-2xl bg-navy-950/90 border border-slate-700/80 p-4 flex flex-col items-center justify-center min-h-[195px] relative overflow-hidden">
+                                    <div id="scriptVisualContainer" class="w-full text-center space-y-3">
+                                        <!-- Renderizado dinámico por JS -->
+                                    </div>
+                                </div>
+
+                                <!-- Cuadro de Subtítulos / Narración Oficial del Guion -->
+                                <div class="hud-frame rounded-xl p-4 space-y-2">
+                                    <div class="flex items-center justify-between">
+                                        <span class="font-mono text-[10px] text-cyber-400 uppercase tracking-wider">VOZ EN OFF / SUBTÍTULOS</span>
+                                        <!-- Onda de audio animada -->
+                                        <div id="audioWave" class="flex items-end gap-1 h-5 playing">
+                                            <div class="wave-bar h-3"></div>
+                                            <div class="wave-bar h-4"></div>
+                                            <div class="wave-bar h-2"></div>
+                                            <div class="wave-bar h-5"></div>
+                                            <div class="wave-bar h-3"></div>
+                                        </div>
+                                    </div>
+                                    <p id="scriptNarrationText" class="text-white font-semibold text-base leading-snug">
+                                        "¿Elegiste tú o el juego ya había decidido qué podías elegir?"
+                                    </p>
+                                    <p id="scriptActionText" class="text-xs text-slate-400 font-mono">
+                                        [Imagen o acción]: Dos caminos o botones de decisión en pantalla.
+                                    </p>
+                                </div>
+
+                                <!-- Controles de Navegación de la Cápsula -->
+                                <div class="space-y-3">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <button onclick="prevScriptStep()" class="px-3 py-2 rounded-xl bg-navy-800 hover:bg-navy-700 border border-slate-700 text-xs font-mono text-slate-200 flex-1">
+                                            ◀ Anterior
+                                        </button>
+                                        <button id="autoPlayBtn" onclick="toggleAutoPlayScript()" class="px-4 py-2 rounded-xl bg-cyber-500 hover:bg-cyber-400 text-navy-950 font-bold text-xs font-mono flex-1">
+                                            ▶ Reproducir 90s
+                                        </button>
+                                        <button onclick="nextScriptStep()" class="px-3 py-2 rounded-xl bg-navy-800 hover:bg-navy-700 border border-slate-700 text-xs font-mono text-slate-200 flex-1">
+                                            Siguiente ▶
+                                        </button>
+                                    </div>
+                                    <button onclick="switchDemoMode('play')" class="w-full py-2 rounded-xl bg-quest-500/20 hover:bg-quest-500/30 border border-quest-400/40 text-quest-300 text-xs font-mono transition-all">
+                                        ⚡ Probar simulación interactiva de esta cápsula
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- MODO B: SIMULADOR INTERACTIVO DE DECISIÓN NARRATIVA -->
+                            <div id="demoPlayView" class="hidden p-5 space-y-4 min-h-[510px] flex-col justify-between bg-gradient-to-b from-navy-900 via-navy-800 to-navy-950">
+                                <div class="flex items-center justify-between text-xs font-mono">
+                                    <span class="px-2 py-0.5 rounded bg-cyber-500/20 text-cyber-300 border border-cyber-400/30">
+                                        LABORATORIO DE AGENCIA
+                                    </span>
+                                    <button onclick="resetInteractiveDilemma()" class="text-slate-400 hover:text-white underline">
+                                        Reiniciar dilema
+                                    </button>
+                                </div>
+
+                                <!-- Escenario del Dilema -->
+                                <div class="hud-frame rounded-xl p-4 space-y-3">
+                                    <div class="text-xs font-mono text-quest-400" id="dilemmaHeader">
+                                        [ESCENA DE PRUEBA: LA CIUDAD EN CUARENTENA]
+                                    </div>
+                                    <p id="dilemmaScenarioText" class="text-sm text-slate-200 leading-relaxed">
+                                        Estás frente a la compuerta del sector médico. Solo queda una dosis de suministros y el temporizador del juego marca 5 segundos. El sistema te obliga a elegir entre dos botones:
+                                    </p>
+                                </div>
+
+                                <!-- Opciones de Decisión del Jugador -->
+                                <div id="dilemmaChoicesContainer" class="space-y-2.5">
+                                    <button onclick="makeDilemmaChoice('A')" class="w-full text-left p-3.5 rounded-xl bg-navy-900 hover:bg-navy-700 border border-cyber-400/40 hover:border-cyber-400 transition-all group">
+                                        <div class="flex items-center justify-between text-xs font-mono text-cyber-400 mb-1">
+                                            <span>[OPCIÓN A // BOTÓN AZUL]</span>
+                                            <span class="group-hover:translate-x-1 transition-transform">ELEGIR ▶</span>
+                                        </div>
+                                        <p class="text-sm font-semibold text-white">Entregar los suministros al hospital central</p>
+                                        <p class="text-xs text-slate-400 mt-0.5">Promete salvar a la mayoría, abandonando a tu compañero.</p>
+                                    </button>
+
+                                    <button onclick="makeDilemmaChoice('B')" class="w-full text-left p-3.5 rounded-xl bg-navy-900 hover:bg-navy-700 border border-quest-400/40 hover:border-quest-400 transition-all group">
+                                        <div class="flex items-center justify-between text-xs font-mono text-quest-400 mb-1">
+                                            <span>[OPCIÓN B // BOTÓN VIOLETA]</span>
+                                            <span class="group-hover:translate-x-1 transition-transform">ELEGIR ▶</span>
+                                        </div>
+                                        <p class="text-sm font-semibold text-white">Proteger a tu compañero herido en el refugio</p>
+                                        <p class="text-xs text-slate-400 mt-0.5">Prioriza el vínculo afectivo sobre el cálculo utilitarista.</p>
+                                    </button>
+
+                                    <button onclick="makeDilemmaChoice('C')" class="w-full text-left p-3 rounded-xl bg-navy-950/80 hover:bg-navy-800 border border-slate-700 hover:border-slate-500 transition-all group">
+                                        <div class="flex items-center justify-between text-xs font-mono text-slate-400">
+                                            <span>[OPCIÓN C // INTENTAR NO ELEGIR O BUSCAR TERCERA VÍA]</span>
+                                            <span>▶</span>
+                                        </div>
+                                    </button>
+                                </div>
+
+                                <!-- Resultado de Lectura Humanística -->
+                                <div id="dilemmaAnalysisBox" class="hidden rounded-xl bg-quest-500/15 border border-quest-400/50 p-4 space-y-2">
+                                    <div class="text-xs font-mono text-quest-300 font-bold uppercase" id="dilemmaAnalysisTitle">
+                                        LECTURA MÁS ALLÁ DEL GAME OVER:
+                                    </div>
+                                    <p id="dilemmaAnalysisText" class="text-xs sm:text-sm text-slate-200 leading-relaxed"></p>
+                                </div>
+
+                                <button onclick="switchDemoMode('script')" class="w-full py-2 rounded-xl bg-navy-800 hover:bg-navy-700 border border-slate-700 text-slate-300 text-xs font-mono">
+                                    ◀ Volver a los 4 momentos del guion oficial
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- COLUMNA DERECHA (7 cols): Ampliación Web, Escaleta, Fuentes y Evidencias -->
+                    <div class="lg:col-span-7 space-y-6">
+                        <div class="hud-frame rounded-2xl p-6 sm:p-8">
+                            
+                            <!-- Encabezado y Pestañas del Artículo de Ampliación Web -->
+                            <div class="border-b border-slate-700/80 pb-5 mb-6">
+                                <div class="flex flex-wrap items-center gap-2 text-xs font-mono mb-2">
+                                    <span class="px-2.5 py-0.5 rounded bg-cyber-500/20 text-cyber-300 border border-cyber-400/30">
+                                        EXPANSIÓN WEB DEL DEMO
+                                    </span>
+                                    <span class="px-2.5 py-0.5 rounded bg-quest-500/20 text-quest-300 border border-quest-400/30">
+                                        LÍNEA: NARRATIVAS QUE NOS JUEGAN
+                                    </span>
+                                    <span class="text-slate-400 ml-auto">LECTURA: 4 MIN</span>
+                                </div>
+                                <h3 class="text-2xl font-bold text-white">
+                                    De la cápsula al archivo: La ilusión de agencia y la ética del diseño
+                                </h3>
+
+                                <!-- Barra de Pestañas -->
+                                <div class="flex flex-wrap gap-2 mt-5">
+                                    <button onclick="switchDemoTab('analisis')" id="demoTabBtn-analisis" class="px-3.5 py-2 rounded-lg text-xs font-mono font-semibold bg-cyber-500 text-navy-950 transition-all">
+                                        01. Análisis Humanístico
+                                    </button>
+                                    <button onclick="switchDemoTab('guion')" id="demoTabBtn-guion" class="px-3.5 py-2 rounded-lg text-xs font-mono font-semibold bg-navy-800 text-slate-300 hover:text-white border border-slate-700 transition-all">
+                                        02. Tabla del Guion Oficial
+                                    </button>
+                                    <button onclick="switchDemoTab('fuentes')" id="demoTabBtn-fuentes" class="px-3.5 py-2 rounded-lg text-xs font-mono font-semibold bg-navy-800 text-slate-300 hover:text-white border border-slate-700 transition-all">
+                                        03. Bibliografía y Fuentes
+                                    </button>
+                                    <button onclick="switchDemoTab('evidencias')" id="demoTabBtn-evidencias" class="px-3.5 py-2 rounded-lg text-xs font-mono font-semibold bg-navy-800 text-slate-300 hover:text-white border border-slate-700 transition-all">
+                                        04. Evidencias (Sección 14.3)
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- PESTAÑA 1: ANÁLISIS PROFUNDO -->
+                            <div id="demoTabContent-analisis" class="space-y-5 text-sm sm:text-base text-slate-300 leading-relaxed">
+                                <div class="p-4 rounded-xl bg-navy-900/90 border-l-4 border-quest-400">
+                                    <span class="font-mono text-xs text-quest-400 block mb-1">TESIS CENTRAL DE LA PIEZA</span>
+                                    <p class="text-white font-medium">
+                                        Los videojuegos convierten reglas matemáticas en experiencias vividas: nos permiten actuar con aparente autonomía, pero siempre dentro de una arquitectura de límites previamente diseñados.
+                                    </p>
+                                </div>
+
+                                <p>
+                                    Cuando un videojuego como <em class="text-white">The Witcher 3</em>, <em class="text-white">Life is Strange</em>, <em class="text-white">Undertale</em> o <em class="text-white">Detroit: Become Human</em> detiene la acción y despliega dos o tres opciones en pantalla, activa lo que en estudios de narrativa interactiva llamamos <strong class="text-cyber-300">agencia dramática</strong>. Aunque el código solo contempla un número finito de ramas (a veces incluso conduciendo al mismo desenlace estructural), el acto de presionar el botón compromete éticamente a quien juega.
+                                </p>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                                    <div class="p-4 rounded-xl bg-navy-900/70 border border-slate-700/80">
+                                        <span class="font-mono text-xs text-cyber-400 block mb-1">01 // RETÓRICA PROCEDIMENTAL</span>
+                                        <h4 class="font-bold text-white text-sm mb-1">Las reglas también comunican ideología</h4>
+                                        <p class="text-xs text-slate-300 leading-relaxed">
+                                            Aquello que un juego te permite hacer —y aquello que ni siquiera programa como posibilidad— revela la visión de mundo de sus creadores sobre el poder, la justicia o el conflicto.
+                                        </p>
+                                    </div>
+                                    <div class="p-4 rounded-xl bg-navy-900/70 border border-slate-700/80">
+                                        <span class="font-mono text-xs text-quest-400 block mb-1">02 // ESPEJO HERMENÉUTICO</span>
+                                        <h4 class="font-bold text-white text-sm mb-1">El sentido cambia en quien interpreta</h4>
+                                        <p class="text-xs text-slate-300 leading-relaxed">
+                                            Una elección importa no solo por cuántos finales desbloquea, sino cuando transforma lo que comprendemos del personaje, del mundo ficcional o de nuestros propios valores.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="pt-3 flex flex-wrap items-center justify-between gap-4 border-t border-slate-800">
+                                    <div class="text-xs font-mono text-slate-400">
+                                        PREGUNTA ABIERTA: <span class="text-quest-300">¿Qué juego te hizo dudar de una decisión?</span>
+                                    </div>
+                                    <a href="#comunidad" class="px-4 py-2 rounded-lg bg-quest-500/20 hover:bg-quest-500/30 border border-quest-400/40 text-quest-300 font-mono text-xs transition-all">
+                                        Responder en el Muro de Comunidad ▼
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- PESTAÑA 2: TABLA DEL GUION OFICIAL (SECCIÓN 14.2) -->
+                            <div id="demoTabContent-guion" class="hidden space-y-4">
+                                <p class="text-xs sm:text-sm text-slate-300">
+                                    Estructura íntegra del guion breve diseñado para la cápsula vertical de ~90 segundos (Sección 14.2 del documento rector). Haz clic en cualquier fila para cargarla en el simulador:
+                                </p>
+                                <div class="overflow-x-auto rounded-xl border border-slate-700">
+                                    <table class="w-full text-left border-collapse text-xs sm:text-sm">
+                                        <thead>
+                                            <tr class="bg-navy-950 text-cyber-400 font-mono text-xs border-b border-slate-700">
+                                                <th class="p-3">Momento</th>
+                                                <th class="p-3">Imagen o acción</th>
+                                                <th class="p-3">Narración literal</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-slate-800 bg-navy-900/70">
+                                            <tr onclick="setScriptStep(0)" class="hover:bg-navy-800 cursor-pointer transition-colors">
+                                                <td class="p-3 font-mono font-bold text-quest-300 whitespace-nowrap">1. Inicio</td>
+                                                <td class="p-3 text-slate-300">Dos caminos o botones de decisión.</td>
+                                                <td class="p-3 text-white italic">"¿Elegiste tú o el juego ya había decidido qué podías elegir?"</td>
+                                            </tr>
+                                            <tr onclick="setScriptStep(1)" class="hover:bg-navy-800 cursor-pointer transition-colors">
+                                                <td class="p-3 font-mono font-bold text-quest-300 whitespace-nowrap">2. Desarrollo 1</td>
+                                                <td class="p-3 text-slate-300">Ejemplo visual de una bifurcación.</td>
+                                                <td class="p-3 text-white italic">"Los videojuegos convierten una regla en experiencia: nos permiten actuar, pero dentro de límites diseñados."</td>
+                                            </tr>
+                                            <tr onclick="setScriptStep(2)" class="hover:bg-navy-800 cursor-pointer transition-colors">
+                                                <td class="p-3 font-mono font-bold text-quest-300 whitespace-nowrap">3. Desarrollo 2</td>
+                                                <td class="p-3 text-slate-300">Comparación de consecuencias.</td>
+                                                <td class="p-3 text-white italic">"Una elección importa cuando cambia lo que comprendemos del personaje, del mundo o de nosotros mismos."</td>
+                                            </tr>
+                                            <tr onclick="setScriptStep(3)" class="hover:bg-navy-800 cursor-pointer transition-colors">
+                                                <td class="p-3 font-mono font-bold text-quest-300 whitespace-nowrap">4. Cierre</td>
+                                                <td class="p-3 text-slate-300">Pregunta en pantalla y logotipo.</td>
+                                                <td class="p-3 text-white italic">"¿Qué juego te hizo dudar de una decisión? Cuéntalo y analicémoslo más allá del Game Over."</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- PESTAÑA 3: BIBLIOGRAFÍA Y FUENTES DE CONSULTA -->
+                            <div id="demoTabContent-fuentes" class="hidden space-y-4">
+                                <p class="text-xs sm:text-sm text-slate-300">
+                                    A diferencia de los medios centrados exclusivamente en actualidad o consumo, cada cápsula de <strong class="text-white">Más allá del Game Over</strong> está respaldada por bibliografía humanística accesible para estudiantes y jugadores:
+                                </p>
+                                <div class="space-y-3 text-xs sm:text-sm">
+                                    <div class="p-3.5 rounded-xl bg-navy-900/90 border border-slate-700/80 flex items-start justify-between gap-4">
+                                        <div>
+                                            <span class="font-mono text-[11px] text-cyber-400">[RETÓRICA DE SISTEMAS]</span>
+                                            <p class="text-slate-200 mt-0.5">
+                                                <strong>Bogost, Ian (2007).</strong> <em>Persuasive Games: The Expressive Power of Videogames.</em> MIT Press. (Concepto de retórica procedimental: cómo los sistemas y reglas expresan ideas culturales).
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="p-3.5 rounded-xl bg-navy-900/90 border border-slate-700/80 flex items-start justify-between gap-4">
+                                        <div>
+                                            <span class="font-mono text-[11px] text-quest-400">[NARRATIVA Y AGENCIA]</span>
+                                            <p class="text-slate-200 mt-0.5">
+                                                <strong>Murray, Janet H. (1999).</strong> <em>Hamlet en la holocubierta: el futuro de la narrativa en el ciberespacio.</em> Paidós. (Análisis sobre inmersión, agencia y transformación en medios interactivos).
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="p-3.5 rounded-xl bg-navy-900/90 border border-slate-700/80 flex items-start justify-between gap-4">
+                                        <div>
+                                            <span class="font-mono text-[11px] text-emerald-400">[ÉTICA EN VIDEOJUEGOS]</span>
+                                            <p class="text-slate-200 mt-0.5">
+                                                <strong>Sicart, Miguel (2009).</strong> <em>The Ethics of Computer Games.</em> MIT Press. (El jugador como sujeto moral reflexivo frente a los sistemas cerrados de reglas).
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- PESTAÑA 4: EVIDENCIAS DE PRODUCCIÓN (SECCIÓN 14.3) -->
+                            <div id="demoTabContent-evidencias" class="hidden space-y-4">
+                                <p class="text-xs sm:text-sm text-slate-300">
+                                    Registro de evidencias técnicas y metodológicas integradas para el flujo de producción por lotes del DEMO (Sección 14.3):
+                                </p>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                                    <div class="p-4 rounded-xl bg-navy-900 border border-slate-700 space-y-1.5">
+                                        <div class="flex items-center justify-between font-mono text-cyber-400">
+                                            <span>[EVIDENCIA 01]</span>
+                                            <span>VERIFICADO ✓</span>
+                                        </div>
+                                        <h4 class="font-bold text-white text-sm">Escritura de Guion y Escaleta</h4>
+                                        <p class="text-slate-400">Estructurado bajo la escaleta base de 7 pasos: pregunta inicial, evidencia, lectura humanística y llamado al diálogo.</p>
+                                    </div>
+                                    <div class="p-4 rounded-xl bg-navy-900 border border-slate-700 space-y-1.5">
+                                        <div class="flex items-center justify-between font-mono text-cyber-400">
+                                            <span>[EVIDENCIA 02]</span>
+                                            <span>4 ESCENAS ✓</span>
+                                        </div>
+                                        <h4 class="font-bold text-white text-sm">Storyboard de 4 Momentos</h4>
+                                        <p class="text-slate-400">Bocetaje visual de Inicio (botones), Desarrollo 1 (árbol nodal), Desarrollo 2 (espejo ético) y Cierre (identidad gráfica).</p>
+                                    </div>
+                                    <div class="p-4 rounded-xl bg-navy-900 border border-slate-700 space-y-1.5">
+                                        <div class="flex items-center justify-between font-mono text-quest-400">
+                                            <span>[EVIDENCIA 03]</span>
+                                            <span> FLUJO POR LOTES ✓</span>
+                                        </div>
+                                        <h4 class="font-bold text-white text-sm">Grabación y Edición Vertical</h4>
+                                        <p class="text-slate-400">Producción con recursos accesibles (móvil, micrófono, iluminación básica, subtítulos dinámicos y paleta azul marino/violeta).</p>
+                                    </div>
+                                    <div class="p-4 rounded-xl bg-navy-900 border border-slate-700 space-y-1.5">
+                                        <div class="flex items-center justify-between font-mono text-emerald-400">
+                                            <span>[EVIDENCIA 04]</span>
+                                            <span>PORTAL ACTIVO ✓</span>
+                                        </div>
+                                        <h4 class="font-bold text-white text-sm">Vinculación TikTok ↔ Sitio Web</h4>
+                                        <p class="text-slate-400">Articulación de la cápsula de descubrimiento con esta ficha temática web y el foro de participación comunitaria.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. LÍNEAS DE CONTENIDO Y ARCHIVO WEB -->
+        <section id="archivo" class="py-16 md:py-24">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+                
+                <!-- Encabezado y Buscador -->
+                <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+                    <div>
+                        <div class="inline-flex items-center gap-2 font-mono text-xs text-cyber-400 uppercase tracking-widest mb-2">
+                            <span>[ SECCIÓN 6.1 // ARCHIVO WEB &amp; LÍNEAS EDITORIALES ]</span>
+                        </div>
+                        <h2 class="text-3xl sm:text-4xl font-extrabold text-white">
+                            Explora nuestras 5 Líneas de Contenido
+                        </h2>
+                        <p class="text-slate-300 mt-2 max-w-2xl text-sm sm:text-base">
+                            Nuestro archivo web organiza cada análisis por eje humanístico y obra analizada. Filtra por categoría o haz clic en cualquier ficha para abrir la lectura completa con bibliografía.
+                        </p>
+                    </div>
+
+                    <!-- Buscador en tiempo real -->
+                    <div class="w-full lg:w-80">
+                        <div class="relative">
+                            <input 
+                                type="text" 
+                                id="archiveSearchInput" 
+                                oninput="filterArticles()"
+                                placeholder="Buscar tema, juego o concepto..." 
+                                class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-navy-800 border border-slate-700 focus:border-cyber-400 focus:outline-none text-sm text-white placeholder-slate-400"
+                            >
+                            <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botones de Filtro de las 5 Líneas Oficiales -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3" id="categoryFilterBar">
+                    <button onclick="setCategoryFilter('todas')" data-cat="todas" class="cat-btn p-3.5 rounded-xl bg-cyber-500 text-navy-950 font-bold text-left transition-all border border-cyber-400">
+                        <span class="font-mono text-[10px] uppercase block opacity-80">[ARCHIVO COMPLETO]</span>
+                        <span class="text-sm block mt-0.5">Todas las líneas (6)</span>
+                    </button>
+                    <button onclick="setCategoryFilter('Narrativas que nos juegan')" data-cat="Narrativas que nos juegan" class="cat-btn p-3.5 rounded-xl bg-navy-800/90 hover:bg-navy-700 text-slate-200 text-left transition-all border border-slate-700">
+                        <span class="font-mono text-[10px] text-cyber-400 uppercase block">01 // NARRATIVA</span>
+                        <span class="text-xs sm:text-sm font-semibold block mt-0.5">Narrativas que nos juegan</span>
+                    </button>
+                    <button onclick="setCategoryFilter('Mundos con historia')" data-cat="Mundos con historia" class="cat-btn p-3.5 rounded-xl bg-navy-800/90 hover:bg-navy-700 text-slate-200 text-left transition-all border border-slate-700">
+                        <span class="font-mono text-[10px] text-quest-400 uppercase block">02 // ESPACIO Y MEMORIA</span>
+                        <span class="text-xs sm:text-sm font-semibold block mt-0.5">Mundos con historia</span>
+                    </button>
+                    <button onclick="setCategoryFilter('La sociedad en pantalla')" data-cat="La sociedad en pantalla" class="cat-btn p-3.5 rounded-xl bg-navy-800/90 hover:bg-navy-700 text-slate-200 text-left transition-all border border-slate-700">
+                        <span class="font-mono text-[10px] text-cyber-400 uppercase block">03 // CRÍTICA SOCIAL</span>
+                        <span class="text-xs sm:text-sm font-semibold block mt-0.5">La sociedad en pantalla</span>
+                    </button>
+                    <button onclick="setCategoryFilter('Detrás del control')" data-cat="Detrás del control" class="cat-btn p-3.5 rounded-xl bg-navy-800/90 hover:bg-navy-700 text-slate-200 text-left transition-all border border-slate-700">
+                        <span class="font-mono text-[10px] text-quest-400 uppercase block">04 // LENGUAJE DEL MEDIO</span>
+                        <span class="text-xs sm:text-sm font-semibold block mt-0.5">Detrás del control</span>
+                    </button>
+                    <button onclick="setCategoryFilter('Comunidad crítica')" data-cat="Comunidad crítica" class="cat-btn p-3.5 rounded-xl bg-navy-800/90 hover:bg-navy-700 text-slate-200 text-left transition-all border border-slate-700">
+                        <span class="font-mono text-[10px] text-emerald-400 uppercase block">05 // DIÁLOGO ABIERTO</span>
+                        <span class="text-xs sm:text-sm font-semibold block mt-0.5">Comunidad crítica</span>
+                    </button>
+                </div>
+
+                <!-- Contenedor Dinámico de Tarjetas del Archivo -->
+                <div id="articlesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Renderizado por JavaScript -->
+                </div>
+
+            </div>
+        </section>
+
+        <!-- 4. METODOLOGÍA EDITORIAL, ESCALETA DE 7 PASOS Y POSICIONAMIENTO -->
+        <section id="metodologia" class="py-16 md:py-24 bg-navy-950/70 border-y border-slate-800/80">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
+                
+                <!-- Parte A: Escaleta Base de 7 Pasos (Sección 15 del PDF) -->
+                <div class="space-y-8">
+                    <div class="max-w-3xl">
+                        <span class="font-mono text-xs text-quest-400 uppercase tracking-widest block mb-2">
+                            [ SECCIÓN 15 // ANEXO: ESCALETA Y ESTRATEGIA DE MEDIOS ]
+                        </span>
+                        <h2 class="text-3xl sm:text-4xl font-extrabold text-white">
+                            Metodología: ¿Cómo traducimos las humanidades al lenguaje digital?
+                        </h2>
+                        <p class="text-slate-300 mt-2 text-sm sm:text-base">
+                            Cada contenido parte de una pregunta concreta y sigue una escaleta rigurosa de 7 pasos para garantizar claridad, sustento documental y conversación crítica. Haz clic en cada etapa para inspeccionarla:
+                        </p>
+                    </div>
+
+                    <!-- Selector Interactivo de los 7 pasos -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5">
+                        <button onclick="selectEscaletaStep(0)" id="escBtn0" class="p-3 rounded-xl border border-cyber-400 bg-cyber-500/20 text-left transition-all">
+                            <span class="font-mono text-xs text-cyber-400 font-bold block">PASO 01</span>
+                            <span class="text-xs sm:text-sm font-semibold text-white mt-1 block">Gancho o pregunta</span>
+                        </button>
+                        <button onclick="selectEscaletaStep(1)" id="escBtn1" class="p-3 rounded-xl border border-slate-700 bg-navy-800/80 hover:bg-navy-700 text-left transition-all">
+                            <span class="font-mono text-xs text-slate-400 font-bold block">PASO 02</span>
+                            <span class="text-xs sm:text-sm font-semibold text-slate-200 mt-1 block">Presentación del caso</span>
+                        </button>
+                        <button onclick="selectEscaletaStep(2)" id="escBtn2" class="p-3 rounded-xl border border-slate-700 bg-navy-800/80 hover:bg-navy-700 text-left transition-all">
+                            <span class="font-mono text-xs text-slate-400 font-bold block">PASO 03</span>
+                            <span class="text-xs sm:text-sm font-semibold text-slate-200 mt-1 block">Contexto humanístico</span>
+                        </button>
+                        <button onclick="selectEscaletaStep(3)" id="escBtn3" class="p-3 rounded-xl border border-slate-700 bg-navy-800/80 hover:bg-navy-700 text-left transition-all">
+                            <span class="font-mono text-xs text-slate-400 font-bold block">PASO 04</span>
+                            <span class="text-xs sm:text-sm font-semibold text-slate-200 mt-1 block">Evidencia del juego</span>
+                        </button>
+                        <button onclick="selectEscaletaStep(4)" id="escBtn4" class="p-3 rounded-xl border border-slate-700 bg-navy-800/80 hover:bg-navy-700 text-left transition-all">
+                            <span class="font-mono text-xs text-slate-400 font-bold block">PASO 05</span>
+                            <span class="text-xs sm:text-sm font-semibold text-slate-200 mt-1 block">Interpretación</span>
+                        </button>
+                        <button onclick="selectEscaletaStep(5)" id="escBtn5" class="p-3 rounded-xl border border-slate-700 bg-navy-800/80 hover:bg-navy-700 text-left transition-all">
+                            <span class="font-mono text-xs text-slate-400 font-bold block">PASO 06</span>
+                            <span class="text-xs sm:text-sm font-semibold text-slate-200 mt-1 block">Conclusión</span>
+                        </button>
+                        <button onclick="selectEscaletaStep(6)" id="escBtn6" class="p-3 rounded-xl border border-slate-700 bg-navy-800/80 hover:bg-navy-700 text-left transition-all">
+                            <span class="font-mono text-xs text-slate-400 font-bold block">PASO 07</span>
+                            <span class="text-xs sm:text-sm font-semibold text-slate-200 mt-1 block">Pregunta a comunidad</span>
+                        </button>
+                    </div>
+
+                    <!-- Detalle del Paso Seleccionado -->
+                    <div class="hud-frame rounded-2xl p-6 sm:p-8 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+                        <div class="lg:col-span-8 space-y-2">
+                            <span id="escDetailBadge" class="font-mono text-xs text-cyber-400 uppercase tracking-wider block">
+                                [ PASO 01 DE 07 // FUNCIÓN EDITORIAL ]
+                            </span>
+                            <h3 id="escDetailTitle" class="text-2xl font-bold text-white">
+                                1. Gancho o pregunta filosófica inicial
+                            </h3>
+                            <p id="escDetailDesc" class="text-slate-300 text-sm sm:text-base leading-relaxed">
+                                Toda pieza inicia con una interrogante clara y provocadora que interpela directamente la experiencia del jugador, desplazando la conversación del simple rendimiento técnico hacia la reflexión cultural.
+                            </p>
+                        </div>
+                        <div class="lg:col-span-4 p-4 rounded-xl bg-navy-900/90 border border-quest-400/30">
+                            <span class="font-mono text-[11px] text-quest-400 block mb-1">EJEMPLO PRÁCTICO:</span>
+                            <p id="escDetailExample" class="text-xs sm:text-sm text-slate-200 italic">
+                                "¿Elegiste tú o el juego ya había decidido qué podías elegir por ti?"
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Parte B: Análisis de la Competencia y Posicionamiento (Sección 4 del PDF) -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start pt-4">
+                    <div class="lg:col-span-5 space-y-4">
+                        <span class="font-mono text-xs text-cyber-400 uppercase tracking-widest block">
+                            [ SECCIÓN 4 // ANÁLISIS DE LA COMPETENCIA ]
+                        </span>
+                        <h3 class="text-2xl sm:text-3xl font-bold text-white">
+                            Nuestro posicionamiento frente a los medios tradicionales
+                        </h3>
+                        <p class="text-sm sm:text-base text-slate-300 leading-relaxed">
+                            Buena parte de la conversación digital se concentra en lanzamientos, rendimiento gráfico y reseñas de compra. <strong class="text-white">Más allá del Game Over</strong> no compite por la noticia más rápida: complementa al ecosistema con interpretación cultural, propósito educativo y fuentes consultables.
+                        </p>
+                        <div class="p-4 rounded-xl bg-quest-500/15 border border-quest-400/40 space-y-1">
+                            <span class="font-mono text-xs text-quest-300 font-bold block">ORGANIZACIÓN POR LOTES (SECCIÓN 7)</span>
+                            <p class="text-xs text-slate-300 leading-relaxed">
+                                Dirección y producción integral por <strong>Edgar Damián Martínez Vázquez</strong>: Semana A dedicada a investigación, verificación de fuentes y guiones; Semana B enfocada en grabación, edición y moderación comunitaria.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-7 overflow-x-auto rounded-2xl border border-slate-700/90 shadow-xl">
+                        <table class="w-full text-left border-collapse text-xs sm:text-sm">
+                            <thead>
+                                <tr class="bg-navy-900 text-cyber-400 font-mono text-xs border-b border-slate-700">
+                                    <th class="p-4">Medio Analizado</th>
+                                    <th class="p-4">Fortalezas Reconocidas</th>
+                                    <th class="p-4 text-quest-300">Oportunidad de Diferenciación</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-800 bg-navy-900/60">
+                                <tr>
+                                    <td class="p-4 font-bold text-white whitespace-nowrap">LevelUp</td>
+                                    <td class="p-4 text-slate-300">Actualidad, cultura gamer y gran alcance entre público hispanohablante.</td>
+                                    <td class="p-4 text-quest-200 font-medium">Profundizar en lectura cultural y acompañar cada análisis con fuentes académicas y culturales.</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-4 font-bold text-white whitespace-nowrap">Eurogamer</td>
+                                    <td class="p-4 text-slate-300">Noticias, crítica especializada y reseñas con sólida trayectoria editorial.</td>
+                                    <td class="p-4 text-quest-200 font-medium">Usar formatos breves y un lenguaje introductorio específicamente dirigido a jóvenes (16-35 años).</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-4 font-bold text-white whitespace-nowrap">3DJuegos</td>
+                                    <td class="p-4 text-slate-300">Amplia cobertura de industria, lanzamientos y comunidad consolidada.</td>
+                                    <td class="p-4 text-quest-200 font-medium">Especializarse en narrativa, humanidades y discusión social participativa.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- 5. CALENDARIZACIÓN ANUAL Y HOJA DE RUTA (SECCIONES 9, 10, 11 Y 12) -->
+        <section id="calendario" class="py-16 md:py-24">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+                
+                <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                    <div>
+                        <span class="font-mono text-xs text-cyber-400 uppercase tracking-widest block mb-2">
+                            [ SECCIONES 9, 10 Y 12 // PLANIFICACIÓN ESTRATÉGICA ]
+                        </span>
+                        <h2 class="text-3xl sm:text-4xl font-extrabold text-white">
+                            Metas en Tres Etapas y Calendario de 12 Meses
+                        </h2>
+                        <p class="text-slate-300 mt-2 max-w-2xl text-sm sm:text-base">
+                            Rutina mensual sostenible: 2 videos por semana en TikTok, 2 artículos al mes en el sitio web, 1 encuesta temática y 1 sesión mensual de revisión de indicadores cuantitativos y cualitativos.
+                        </p>
+                    </div>
+
+                    <!-- Filtro por Etapa del Año -->
+                    <div class="inline-flex flex-wrap gap-1.5 p-1.5 rounded-xl bg-navy-800 border border-slate-700 self-start">
+                        <button onclick="filterCalendarStage('all')" id="stageBtn-all" class="px-3 py-1.5 rounded-lg text-xs font-mono font-semibold bg-cyber-500 text-navy-950 transition-all">
+                            Año Completo (M1-M12)
+                        </button>
+                        <button onclick="filterCalendarStage(1)" id="stageBtn-1" class="px-3 py-1.5 rounded-lg text-xs font-mono font-semibold text-slate-300 hover:text-white transition-all">
+                            Etapa 1: Lanzamiento
+                        </button>
+                        <button onclick="filterCalendarStage(2)" id="stageBtn-2" class="px-3 py-1.5 rounded-lg text-xs font-mono font-semibold text-slate-300 hover:text-white transition-all">
+                            Etapa 2: Consolidación
+                        </button>
+                        <button onclick="filterCalendarStage(3)" id="stageBtn-3" class="px-3 py-1.5 rounded-lg text-xs font-mono font-semibold text-slate-300 hover:text-white transition-all">
+                            Etapa 3: Sostenibilidad
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tarjetas Resumen de las 3 Etapas (Sección 9) -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="hud-frame rounded-2xl p-5 border-t-4 border-t-cyber-400">
+                        <div class="flex items-center justify-between text-xs font-mono text-cyber-400 mb-2">
+                            <span>ETAPA 1 // MESES 1 A 3</span>
+                            <span>PUBLICIDAD: TRÁILER Y REDES</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-2">1. Lanzamiento y Validación</h3>
+                        <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                            Definir identidad y manual editorial; producir el DEMO; abrir TikTok; publicar la primera serie; habilitar la página web básica y recoger primeros comentarios.
+                        </p>
+                    </div>
+                    <div class="hud-frame rounded-2xl p-5 border-t-4 border-t-quest-400">
+                        <div class="flex items-center justify-between text-xs font-mono text-quest-400 mb-2">
+                            <span>ETAPA 2 // MESES 4 A 8</span>
+                            <span>DIFUSIÓN Y ALIANZAS</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-2">2. Consolidación Temática</h3>
+                        <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                            Mantener frecuencia constante; inaugurar dos líneas temáticas adicionales; publicar artículos comparativos; realizar colaboraciones y optimizar formatos según indicadores.
+                        </p>
+                    </div>
+                    <div class="hud-frame rounded-2xl p-5 border-t-4 border-t-emerald-400">
+                        <div class="flex items-center justify-between text-xs font-mono text-emerald-400 mb-2">
+                            <span>ETAPA 3 // MESES 9 A 12</span>
+                            <span>COMUNIDAD ESTABLE</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-2">3. Sostenibilidad y Proyección</h3>
+                        <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                            Formar una comunidad recurrente; lanzar una actividad en vivo; evaluar membresías o talleres; elaborar el informe anual y el plan del segundo año.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Cuadrícula Interactiva de los 12 Meses (Sección 10) -->
+                <div id="calendarGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <!-- Renderizado dinámico por JS -->
+                </div>
+
+            </div>
+        </section>
+
+        <!-- 6. ESPACIO DE COMUNIDAD CRÍTICA (ENCUESTA MENSUAL + FORO DE CONVERSACIÓN) -->
+        <section id="comunidad" class="py-16 md:py-24 bg-navy-950/80 border-t border-slate-800/80">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+                
+                <div class="max-w-3xl">
+                    <span class="font-mono text-xs text-quest-400 uppercase tracking-widest block mb-2">
+                        [ SECCIÓN 6.2 // ESTRATEGIA DE INTERACCIÓN Y COMUNIDAD CRÍTICA ]
+                    </span>
+                    <h2 class="text-3xl sm:text-4xl font-extrabold text-white">
+                        La conversación continúa más allá del Game Over
+                    </h2>
+                    <p class="text-slate-300 mt-2 text-sm sm:text-base">
+                        Cada cápsula cierra con una pregunta específica y cada mes la audiencia elige un eje de análisis mediante votación abierta. Tus comentarios argumentados forman parte de nuestras video-respuestas semanales.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                    
+                    <!-- Columna Izquierda (5 cols): Encuesta Mensual Interactiva + Normas de Convivencia -->
+                    <div class="lg:col-span-5 space-y-6">
+                        
+                        <!-- Encuesta Mensual -->
+                        <div class="hud-frame rounded-2xl p-6 space-y-5">
+                            <div class="flex items-center justify-between">
+                                <span class="px-2.5 py-1 rounded bg-quest-500/20 text-quest-300 border border-quest-400/30 font-mono text-xs">
+                                    ENCUESTA MENSUAL ACTIVA
+                                </span>
+                                <span id="pollTotalVotes" class="font-mono text-xs text-slate-400">148 votos registrados</span>
+                            </div>
+
+                            <div>
+                                <h3 class="text-xl font-bold text-white">
+                                    ¿Qué tema debemos analizar el próximo mes en TikTok y el archivo web?
+                                </h3>
+                                <p class="text-xs text-slate-400 mt-1">
+                                    Selecciona una opción para registrar tu voto en tiempo real:
+                                </p>
+                            </div>
+
+                            <div id="pollOptionsContainer" class="space-y-3">
+                                <!-- Renderizado dinámico por JS -->
+                            </div>
+
+                            <div id="pollFeedbackMsg" class="hidden p-3 rounded-xl bg-cyber-500/15 border border-cyber-400/40 text-xs text-cyber-300 font-mono">
+                                ✓ ¡Gracias por participar! Tu voto ha sido integrado a la agenda editorial de la comunidad.
+                            </div>
+                        </div>
+
+                        <!-- Normas de Convivencia (Sección 6.2) -->
+                        <div class="rounded-2xl bg-navy-900/90 border border-slate-700/80 p-6 space-y-3">
+                            <div class="flex items-center gap-2 text-xs font-mono text-emerald-400">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                                </svg>
+                                <span>PACTO DE CONVIVENCIA COMUNITARIA</span>
+                            </div>
+                            <h4 class="font-bold text-white text-base">Argumentación, respeto y cero ataques personales</h4>
+                            <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                                Evaluamos nuestros contenidos no solo por cifras de alcance, sino por la calidad reflexiva de las conversaciones que despiertan. Cada semana seleccionamos un comentario argumentado para responderlo en video.
+                            </p>
+                        </div>
+
+                    </div>
+
+                    <!-- Columna Derecha (7 cols): Muro de Debate Interactivo sobre la pregunta del DEMO -->
+                    <div class="lg:col-span-7 hud-frame rounded-2xl p-6 sm:p-8 space-y-6">
+                        <div class="border-b border-slate-700/80 pb-4">
+                            <span class="font-mono text-xs text-cyber-400 uppercase block mb-1">
+                                [ FORO ABIERTO DEL PROTOTIPO DEMO ]
+                            </span>
+                            <h3 class="text-xl sm:text-2xl font-bold text-white">
+                                «¿Qué juego te hizo dudar de una decisión y por qué?»
+                            </h3>
+                        </div>
+
+                        <!-- Formulario para agregar aporte -->
+                        <form id="commentForm" onsubmit="submitCommunityComment(event)" class="space-y-4 bg-navy-900/90 p-4 sm:p-5 rounded-xl border border-slate-700/80">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label for="commentAuthor" class="block text-xs font-mono text-slate-300 mb-1">Tu nombre o alias</label>
+                                    <input type="text" id="commentAuthor" required placeholder="Ej. Sofía M. (Estudiante)" class="w-full px-3.5 py-2 rounded-lg bg-navy-950 border border-slate-700 focus:border-cyber-400 focus:outline-none text-sm text-white">
+                                </div>
+                                <div>
+                                    <label for="commentGame" class="block text-xs font-mono text-slate-300 mb-1">Videojuego comentado</label>
+                                    <input type="text" id="commentGame" required placeholder="Ej. Soma, NieR: Automata, Fallout..." class="w-full px-3.5 py-2 rounded-lg bg-navy-950 border border-slate-700 focus:border-cyber-400 focus:outline-none text-sm text-white">
+                                </div>
+                            </div>
+                            <div>
+                                <label for="commentText" class="block text-xs font-mono text-slate-300 mb-1">Tu reflexión o interpretación cultural</label>
+                                <textarea id="commentText" rows="3" required placeholder="Comparte qué decisión te hizo dudar y qué te hizo pensar sobre el personaje, el mundo o sobre ti..." class="w-full px-3.5 py-2 rounded-lg bg-navy-950 border border-slate-700 focus:border-cyber-400 focus:outline-none text-sm text-white"></textarea>
+                            </div>
+                            <div class="flex flex-wrap items-center justify-between gap-3">
+                                <span class="text-[11px] font-mono text-slate-400">
+                                    ✓ Cumple con las normas: argumentación y respeto.
+                                </span>
+                                <button type="submit" class="px-5 py-2.5 rounded-xl bg-cyber-500 hover:bg-cyber-400 text-navy-950 font-bold text-xs sm:text-sm transition-all">
+                                    Publicar reflexión en el archivo
+                                </button>
+                            </div>
+                        </form>
+
+                        <!-- Lista de Comentarios Argumentados -->
+                        <div id="commentsList" class="space-y-4 max-h-[420px] overflow-y-auto pr-1">
+                            <!-- Renderizado dinámico por JS -->
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- 7. IDENTIDAD INSTITUCIONAL, VIABILIDAD Y ÉTICA (SECCIONES 1.3 Y 8) -->
+        <section class="py-16 bg-navy-900 border-t border-slate-800">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Misión -->
+                    <div class="p-6 rounded-2xl bg-navy-800/90 border border-slate-700/80 space-y-2">
+                        <span class="font-mono text-xs text-cyber-400 uppercase">[ SECCIÓN 1.3 // MISIÓN ]</span>
+                        <h3 class="text-xl font-bold text-white">Nuestra Misión</h3>
+                        <p class="text-sm text-slate-300 leading-relaxed">
+                            Acercar el análisis humanístico de los videojuegos a públicos jóvenes mediante contenidos rigurosos, comprensibles y participativos.
+                        </p>
+                    </div>
+
+                    <!-- Visión -->
+                    <div class="p-6 rounded-2xl bg-navy-800/90 border border-slate-700/80 space-y-2">
+                        <span class="font-mono text-xs text-quest-400 uppercase">[ SECCIÓN 1.3 // VISIÓN ]</span>
+                        <h3 class="text-xl font-bold text-white">Nuestra Visión</h3>
+                        <p class="text-sm text-slate-300 leading-relaxed">
+                            Consolidarse como una comunidad hispanohablante de referencia para la conversación crítica sobre videojuegos, cultura y sociedad.
+                        </p>
+                    </div>
+
+                    <!-- Principio Ético y Sostenibilidad -->
+                    <div class="p-6 rounded-2xl bg-navy-800/90 border border-emerald-500/30 space-y-2">
+                        <span class="font-mono text-xs text-emerald-400 uppercase">[ SECCIÓN 8 // PRINCIPIO ÉTICO ]</span>
+                        <h3 class="text-xl font-bold text-white">Independencia y Transparencia</h3>
+                        <p class="text-sm text-slate-300 leading-relaxed">
+                            Toda colaboración, taller o patrocinio se identificará con total transparencia; jamás se aceptarán acuerdos que condicionen las conclusiones editoriales ni se usarán datos sin consentimiento.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+    </main>
+
+    <!-- FOOTER ACADÉMICO Y DE CRÉDITOS -->
+    <footer class="bg-navy-950 border-t border-slate-800/90 py-12 text-sm text-slate-400">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
+                
+                <!-- Identidad -->
+                <div class="md:col-span-5 space-y-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-lg bg-navy-800 border border-cyber-400/40 flex items-center justify-center text-cyber-400 font-mono font-bold">
+                            ▶
+                        </div>
+                        <div>
+                            <span class="font-bold text-white text-base block">Más allá del Game Over</span>
+                            <span class="font-mono text-xs text-quest-400">«Jugar también es interpretar.»</span>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-400 leading-relaxed max-w-sm">
+                        Propuesta de medio digital alternativo para el análisis cultural y narrativo de los videojuegos. Combinando TikTok y archivo web documental.
+                    </p>
+                </div>
+
+                <!-- Navegación rápida -->
+                <div class="md:col-span-3 space-y-2">
+                    <span class="font-mono text-xs text-white uppercase tracking-wider block">Secciones del Portal</span>
+                    <ul class="space-y-1.5 text-xs">
+                        <li><a href="#inicio" class="hover:text-cyber-400 transition-colors">Portada e Identidad</a></li>
+                        <li><a href="#demo" class="hover:text-cyber-400 transition-colors">Prototipo DEMO (90s + Web)</a></li>
+                        <li><a href="#archivo" class="hover:text-cyber-400 transition-colors">Las 5 Líneas de Contenido</a></li>
+                        <li><a href="#metodologia" class="hover:text-cyber-400 transition-colors">Escaleta Base de 7 Pasos</a></li>
+                        <li><a href="#calendario" class="hover:text-cyber-400 transition-colors">Calendario de 12 Meses</a></li>
+                        <li><a href="#comunidad" class="hover:text-cyber-400 transition-colors">Encuesta y Comunidad Crítica</a></li>
+                    </ul>
+                </div>
+
+                <!-- Créditos Académicos del Documento -->
+                <div class="md:col-span-4 p-4 rounded-xl bg-navy-900 border border-slate-800 space-y-1.5 text-xs">
+                    <span class="font-mono text-[11px] text-cyber-400 uppercase block">[ FICHA DE AUTORÍA ACADÉMICA ]</span>
+                    <p class="text-slate-200"><strong>Autor:</strong> Edgar Damián Martínez Vázquez</p>
+                    <p class="text-slate-300"><strong>Programa:</strong> Licenciatura en Humanidades y Narrativas Multimedia</p>
+                    <p class="text-slate-300"><strong>Proyecto:</strong> Actividad integradora — <em>Mi medio digital y alternativo</em></p>
+                    <p class="text-slate-400 font-mono pt-1">Fecha: 12 de octubre de 2026</p>
+                </div>
+            </div>
+
+            <div class="pt-6 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono text-slate-500">
+                <span>© 2026 MÁS ALLÁ DEL GAME OVER // EDGAR DAMIÁN MARTÍNEZ VÁZQUEZ</span>
+                <button onclick="openManifestoModal()" class="text-cyber-400 hover:underline">
+                    [ Ver Resumen Ejecutivo e Indicadores del Proyecto ]
+                </button>
+            </div>
+        </div>
+    </footer>
+
+    <!-- MODAL 1: FICHA TEMÁTICA Y ARTÍCULO PROFUNDO -->
+    <div id="articleModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-navy-950/85 backdrop-blur-md">
+        <div class="hud-frame rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 sm:p-8 shadow-2xl space-y-6 relative">
+            <div class="flex items-start justify-between gap-4 border-b border-slate-700 pb-4">
+                <div>
+                    <span id="modalCategoryBadge" class="px-2.5 py-1 rounded bg-quest-500/20 text-quest-300 border border-quest-400/30 font-mono text-xs">
+                        CATEGORÍA
+                    </span>
+                    <h3 id="modalTitle" class="text-2xl sm:text-3xl font-extrabold text-white mt-2">
+                        Título de la Ficha Temática
+                    </h3>
+                    <p id="modalGames" class="text-xs font-mono text-cyber-400 mt-1"></p>
+                </div>
+                <button onclick="closeArticleModal()" class="p-2 rounded-lg bg-navy-800 hover:bg-navy-700 text-slate-300 hover:text-white border border-slate-700" aria-label="Cerrar ficha">
+                    ✕
+                </button>
+            </div>
+
+            <!-- Cuerpo de la Ficha -->
+            <div class="space-y-5 text-sm sm:text-base text-slate-200 leading-relaxed">
+                <div class="p-4 rounded-xl bg-navy-900 border-l-4 border-cyber-400">
+                    <span class="font-mono text-xs text-cyber-400 block mb-1">PREGUNTA DE PARTIDA</span>
+                    <p id="modalQuestion" class="font-semibold text-white italic"></p>
+                </div>
+
+                <div>
+                    <h4 class="font-mono text-xs text-quest-400 uppercase tracking-wider mb-1">1. Evidencia en el videojuego</h4>
+                    <p id="modalEvidence" class="text-slate-300"></p>
+                </div>
+
+                <div>
+                    <h4 class="font-mono text-xs text-quest-400 uppercase tracking-wider mb-1">2. Lectura humanística y contexto cultural</h4>
+                    <p id="modalContext" class="text-slate-300"></p>
+                </div>
+
+                <div class="p-4 rounded-xl bg-navy-900/90 border border-slate-700/80">
+                    <h4 class="font-mono text-xs text-cyber-400 uppercase tracking-wider mb-1">3. Bibliografía y referencias sugeridas</h4>
+                    <p id="modalBiblio" class="text-xs sm:text-sm text-slate-300 font-mono"></p>
+                </div>
+
+                <div class="p-4 rounded-xl bg-quest-500/15 border border-quest-400/40 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <span class="font-mono text-xs text-quest-300 block">PREGUNTA ABIERTA A LA COMUNIDAD:</span>
+                        <p id="modalCommunityPrompt" class="text-sm font-semibold text-white mt-0.5"></p>
+                    </div>
+                    <button onclick="jumpToCommunityFromModal()" class="px-4 py-2 rounded-xl bg-cyber-500 hover:bg-cyber-400 text-navy-950 font-bold text-xs font-mono whitespace-nowrap">
+                        Debatir en el foro ▼
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 2: EXPEDIENTE ACADÉMICO COMPLETO (VIABILIDAD, INDICADORES E IDENTIDAD GRÁFICA) -->
+    <div id="manifestoModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-navy-950/85 backdrop-blur-md">
+        <div class="hud-frame rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6 sm:p-8 shadow-2xl space-y-6">
+            <div class="flex items-start justify-between gap-4 border-b border-slate-700 pb-4">
+                <div>
+                    <span class="font-mono text-xs text-cyber-400 uppercase">[ DOCUMENTO RECTOR // ACTIVIDAD INTEGRADORA ]</span>
+                    <h3 class="text-2xl font-extrabold text-white mt-1">
+                        Expediente del Proyecto: «Más allá del Game Over»
+                    </h3>
+                    <p class="text-xs text-slate-400 font-mono">Autor: Edgar Damián Martínez Vázquez | Licenciatura en Humanidades y Narrativas Multimedia</p>
+                </div>
+                <button onclick="closeManifestoModal()" class="p-2 rounded-lg bg-navy-800 hover:bg-navy-700 text-slate-300 hover:text-white border border-slate-700">
+                    ✕
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs sm:text-sm">
+                <div class="p-4 rounded-xl bg-navy-900 border border-slate-700 space-y-2">
+                    <span class="font-mono text-xs text-cyber-400">SECCIÓN 8 // VIABILIDAD Y FINANCIAMIENTO</span>
+                    <h4 class="font-bold text-white">Recursos, Alianzas y Sostenibilidad</h4>
+                    <ul class="list-disc list-inside text-slate-300 space-y-1">
+                        <li><strong>Recursos iniciales:</strong> Teléfono móvil, micrófono accesible, iluminación básica, edición y este portal web.</li>
+                        <li><strong>Financiamiento ético:</strong> Aportaciones voluntarias, membresías no excluyentes, talleres introductorios de análisis narrativo y convocatorias culturales.</li>
+                        <li><strong>Socios potenciales:</strong> Universidades, bibliotecas, centros culturales, colectivos indie y museos de cultura digital.</li>
+                    </ul>
+                </div>
+
+                <div class="p-4 rounded-xl bg-navy-900 border border-slate-700 space-y-2">
+                    <span class="font-mono text-xs text-quest-400">SECCIÓN 12 // INDICADORES DE EVALUACIÓN</span>
+                    <h4 class="font-bold text-white">Métricas Cuantitativas y Cualitativas</h4>
+                    <ul class="list-disc list-inside text-slate-300 space-y-1">
+                        <li><strong>Alcance:</strong> Reproducciones en TikTok, usuarios alcanzados y visitas al archivo web.</li>
+                        <li><strong>Calidad de consumo:</strong> Tiempo de visualización, retención y lectura de fichas.</li>
+                        <li><strong>Valor cualitativo:</strong> Comentarios argumentados, debates respetuosos y muestras de reflexión o aprendizaje.</li>
+                    </ul>
+                </div>
+
+                <div class="p-4 rounded-xl bg-navy-900 border border-slate-700 space-y-2 md:col-span-2">
+                    <span class="font-mono text-xs text-emerald-400">SECCIÓN 13 // MANUAL DE IDENTIDAD GRÁFICA APLICADO EN ESTE SITIO</span>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+                        <div class="p-3 rounded-lg bg-[#0A1128] border border-slate-700">
+                            <span class="block w-full h-4 rounded bg-[#0A1128] border border-slate-600 mb-1.5"></span>
+                            <strong class="text-white text-xs block">Azul Marino (#0A1128)</strong>
+                            <span class="text-[11px] text-slate-400">Rigor, confianza y profundidad</span>
+                        </div>
+                        <div class="p-3 rounded-lg bg-navy-950 border border-slate-700">
+                            <span class="block w-full h-4 rounded bg-[#0088FF] mb-1.5"></span>
+                            <strong class="text-white text-xs block">Azul Brillante (#0088FF)</strong>
+                            <span class="text-[11px] text-slate-400">Tecnología, energía y CTAs</span>
+                        </div>
+                        <div class="p-3 rounded-lg bg-navy-950 border border-slate-700">
+                            <span class="block w-full h-4 rounded bg-[#8B5CF6] mb-1.5"></span>
+                            <strong class="text-white text-xs block">Violeta (#8B5CF6)</strong>
+                            <span class="text-[11px] text-slate-400">Categorías y preguntas</span>
+                        </div>
+                        <div class="p-3 rounded-lg bg-navy-950 border border-slate-700">
+                            <span class="font-mono text-xs text-cyber-400 block mb-1">Aa / [TAG]</span>
+                            <strong class="text-white text-xs block">Sans + Monoespaciada</strong>
+                            <span class="text-[11px] text-slate-400">Lectura limpia + interfaz HUD</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end">
+                <button onclick="closeManifestoModal()" class="px-5 py-2.5 rounded-xl bg-cyber-500 text-navy-950 font-bold text-xs font-mono">
+                    Cerrar expediente
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // =========================================================================
+        // 1. PREGUNTAS ROTATIVAS EN EL HERO
+        // =========================================================================
+        const heroQuestions = [
+            "«¿Cómo construyen mundos los videojuegos, qué identidades representan y por qué sus reglas nos hacen reflexionar sobre nuestra propia sociedad?»",
+            "«¿Elegiste tú o el juego ya había decidido qué podías elegir desde su código?»",
+            "«¿Por qué una ruina silenciosa en un videojuego puede contarnos más sobre la memoria histórica que un manual escolar?»",
+            "«¿Qué nos dicen los sistemas de moralidad y karma sobre cómo juzgamos el bien y el mal en la vida cotidiana?»"
+        ];
+        let currentHeroQuestionIdx = 0;
+
+        function cycleHeroQuestion() {
+            currentHeroQuestionIdx = (currentHeroQuestionIdx + 1) % heroQuestions.length;
+            const el = document.getElementById('heroDynamicQuestion');
+            el.style.opacity = '0';
+            setTimeout(() => {
+                el.textContent = heroQuestions[currentHeroQuestionIdx];
+                el.style.opacity = '1';
+            }, 180);
+        }
+
+        // =========================================================================
+        // 2. LÓGICA DEL PROTOTIPO DEMO INTERACTIVO (SECCIÓN 14)
+        // =========================================================================
+        const scriptMoments = [
+            {
+                badge: "MOMENTO 1/4: INICIO (00:00 - 00:18)",
+                timer: "00:12 / 01:30",
+                narration: "«¿Elegiste tú o el juego ya había decidido qué podías elegir?»",
+                action: "[Imagen o acción]: Dos caminos o botones de decisión.",
+                visualHtml: `
+                    <div class="space-y-3 w-full px-2">
+                        <div class="text-[11px] font-mono text-quest-300 uppercase tracking-widest">[ GANCHO VISUAL // BIFURCACIÓN ]</div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="p-3 rounded-xl bg-cyber-500/20 border border-cyber-400 text-cyber-300 font-mono text-xs font-bold shadow-lg shadow-cyber-500/10">
+                                [A] SALVAR LA CIUDAD
+                            </div>
+                            <div class="p-3 rounded-xl bg-quest-500/20 border border-quest-400 text-quest-300 font-mono text-xs font-bold shadow-lg shadow-quest-500/10">
+                                [B] SALVAR AL ALIADO
+                            </div>
+                        </div>
+                        <div class="text-xs text-slate-400 font-mono">¿Libertad real o arquitectura diseñada?</div>
+                    </div>
+                `
+            },
+            {
+                badge: "MOMENTO 2/4: DESARROLLO 1 (00:18 - 00:48)",
+                timer: "00:38 / 01:30",
+                narration: "«Los videojuegos convierten una regla en experiencia: nos permiten actuar, pero dentro de límites diseñados.»",
+                action: "[Imagen o acción]: Ejemplo visual de una bifurcación en árbol de código.",
+                visualHtml: `
+                    <div class="space-y-2 w-full px-3">
+                        <div class="text-[11px] font-mono text-cyber-400 uppercase">[ ARQUITECTURA DE SISTEMAS ]</div>
+                        <svg class="w-48 h-24 mx-auto" viewBox="0 0 200 90" fill="none">
+                            <circle cx="25" cy="45" r="8" fill="#0088FF"/>
+                            <path d="M33 45 L90 20 M33 45 L90 70" stroke="#38BDF8" stroke-width="2" stroke-dasharray="4 3"/>
+                            <circle cx="95" cy="20" r="7" fill="#8B5CF6"/>
+                            <circle cx="95" cy="70" r="7" fill="#8B5CF6"/>
+                            <path d="M102 20 L165 45 M102 70 L165 45" stroke="#A78BFA" stroke-width="2"/>
+                            <rect x="162" y="35" width="22" height="20" rx="4" fill="#0D152C" stroke="#38BDF8" stroke-width="2"/>
+                        </svg>
+                        <div class="text-xs text-slate-300 font-mono">Regla programada → Experiencia vivida</div>
+                    </div>
+                `
+            },
+            {
+                badge: "MOMENTO 3/4: DESARROLLO 2 (00:48 - 01:12)",
+                timer: "01:05 / 01:30",
+                narration: "«Una elección importa cuando cambia lo que comprendemos del personaje, del mundo o de nosotros mismos.»",
+                action: "[Imagen o acción]: Comparación de consecuencias éticas y narrativas.",
+                visualHtml: `
+                    <div class="space-y-2.5 w-full px-3">
+                        <div class="text-[11px] font-mono text-quest-300 uppercase">[ IMPACTO HERMENÉUTICO ]</div>
+                        <div class="grid grid-cols-3 gap-2 text-[11px] font-mono">
+                            <div class="p-2.5 rounded-lg bg-navy-900 border border-slate-700 text-slate-200">
+                                <span class="text-cyber-400 block font-bold">01</span>
+                                El Personaje
+                            </div>
+                            <div class="p-2.5 rounded-lg bg-navy-900 border border-slate-700 text-slate-200">
+                                <span class="text-quest-400 block font-bold">02</span>
+                                El Mundo
+                            </div>
+                            <div class="p-2.5 rounded-lg bg-navy-900 border border-cyber-400/50 text-white">
+                                <span class="text-emerald-400 block font-bold">03</span>
+                                Nosotros
+                            </div>
+                        </div>
+                        <div class="text-xs text-slate-400">Más allá del puntaje o el árbol de ramas.</div>
+                    </div>
+                `
+            },
+            {
+                badge: "MOMENTO 4/4: CIERRE Y COMUNIDAD (01:12 - 01:30)",
+                timer: "01:30 / 01:30",
+                narration: "«¿Qué juego te hizo dudar de una decisión? Cuéntalo y analicémoslo más allá del Game Over.»",
+                action: "[Imagen o acción]: Pregunta en pantalla y logotipo oficial del proyecto.",
+                visualHtml: `
+                    <div class="space-y-2.5 w-full px-3">
+                        <div class="w-12 h-12 mx-auto rounded-xl bg-navy-900 border border-cyber-400 flex items-center justify-center text-cyber-400 font-bold text-xl shadow-lg">
+                            ▶
+                        </div>
+                        <div class="text-sm font-bold text-white">Más allá del Game Over</div>
+                        <div class="text-xs font-mono text-quest-300">«Jugar también es interpretar.»</div>
+                        <a href="#comunidad" class="inline-block mt-1 px-3 py-1 rounded-full bg-cyber-500/20 border border-cyber-400 text-[11px] font-mono text-cyber-300">
+                            Comentar en el foro ▼
+                        </a>
+                    </div>
+                `
+            }
+        ];
+
+        let currentScriptStep = 0;
+        let scriptAutoPlayInterval = null;
+
+        function setScriptStep(index) {
+            currentScriptStep = index;
+            const item = scriptMoments[index];
+            document.getElementById('scriptMomentBadge').textContent = item.badge;
+            document.getElementById('demoTimerBadge').textContent = item.timer;
+            document.getElementById('scriptNarrationText').textContent = item.narration;
+            document.getElementById('scriptActionText').textContent = item.action;
+            document.getElementById('scriptVisualContainer').innerHTML = item.visualHtml;
+
+            for (let i = 0; i < 4; i++) {
+                const bar = document.getElementById('stepBar' + i);
+                if (i <= index) {
+                    bar.className = "h-1.5 rounded-full bg-cyber-400 transition-all";
+                } else {
+                    bar.className = "h-1.5 rounded-full bg-slate-700 transition-all";
+                }
+            }
+        }
+
+        function nextScriptStep() {
+            setScriptStep((currentScriptStep + 1) % scriptMoments.length);
+        }
+
+        function prevScriptStep() {
+            setScriptStep((currentScriptStep - 1 + scriptMoments.length) % scriptMoments.length);
+        }
+
+        function toggleAutoPlayScript() {
+            const btn = document.getElementById('autoPlayBtn');
+            if (scriptAutoPlayInterval) {
+                clearInterval(scriptAutoPlayInterval);
+                scriptAutoPlayInterval = null;
+                btn.textContent = "▶ Reproducir 90s";
+            } else {
+                btn.textContent = "⏸ Pausar";
+                scriptAutoPlayInterval = setInterval(() => {
+                    nextScriptStep();
+                }, 3200);
+            }
+        }
+
+        function switchDemoMode(mode) {
+            const scriptView = document.getElementById('demoScriptView');
+            const playView = document.getElementById('demoPlayView');
+            const scriptBtn = document.getElementById('modeScriptBtn');
+            const playBtn = document.getElementById('modePlayBtn');
+
+            if (mode === 'script') {
+                scriptView.classList.remove('hidden');
+                scriptView.classList.add('flex');
+                playView.classList.add('hidden');
+                playView.classList.remove('flex');
+                scriptBtn.className = "px-4 py-2 rounded-lg text-xs sm:text-sm font-mono font-semibold bg-cyber-500 text-navy-950 transition-all";
+                playBtn.className = "px-4 py-2 rounded-lg text-xs sm:text-sm font-mono font-semibold text-slate-300 hover:text-white transition-all";
+            } else {
+                scriptView.classList.add('hidden');
+                scriptView.classList.remove('flex');
+                playView.classList.remove('hidden');
+                playView.classList.add('flex');
+                playBtn.className = "px-4 py-2 rounded-lg text-xs sm:text-sm font-mono font-semibold bg-cyber-500 text-navy-950 transition-all";
+                scriptBtn.className = "px-4 py-2 rounded-lg text-xs sm:text-sm font-mono font-semibold text-slate-300 hover:text-white transition-all";
+            }
+        }
+
+        function makeDilemmaChoice(option) {
+            const box = document.getElementById('dilemmaAnalysisBox');
+            const title = document.getElementById('dilemmaAnalysisTitle');
+            const text = document.getElementById('dilemmaAnalysisText');
+            box.classList.remove('hidden');
+
+            if (option === 'A') {
+                title.textContent = "ANÁLISIS DE TU ELECCIÓN [A]: CÁLCULO UTILITARISTA";
+                text.textContent = "Elegiste salvar a la mayoría, pero observa cómo el diseño del juego te obligó a aceptar una pérdida trágica sin permitirte negociar. Aunque el camino estaba preprogramado, tu duda previa demuestra que la decisión te interpeló éticamente.";
+            } else if (option === 'B') {
+                title.textContent = "ANÁLISIS DE TU ELECCIÓN [B]: ÉTICA DEL CUIDADO Y VÍNCULO";
+                text.textContent = "Priorizaste a un personaje con nombre e historia sobre una estadística abstracta. Muchos videojuegos construyen empatía narrativa precisamente para poner en tensión la lógica fría de la eficiencia.";
+            } else {
+                title.textContent = "ANÁLISIS DE TU ELECCIÓN [C]: RESISTENCIA AL SISTEMA";
+                text.textContent = "¡Intentaste salir del marco binario! En la mayoría de los juegos, el temporizador decidiría por ti o aparecería un Game Over. Esa frontera invisible evidencia dónde terminan tus acciones y dónde empieza la autoría del diseñador.";
+            }
+        }
+
+        function resetInteractiveDilemma() {
+            document.getElementById('dilemmaAnalysisBox').classList.add('hidden');
+        }
+
+        function switchDemoTab(tabId) {
+            const tabs = ['analisis', 'guion', 'fuentes', 'evidencias'];
+            tabs.forEach(t => {
+                const content = document.getElementById('demoTabContent-' + t);
+                const btn = document.getElementById('demoTabBtn-' + t);
+                if (t === tabId) {
+                    content.classList.remove('hidden');
+                    btn.className = "px-3.5 py-2 rounded-lg text-xs font-mono font-semibold bg-cyber-500 text-navy-950 transition-all";
+                } else {
+                    content.classList.add('hidden');
+                    btn.className = "px-3.5 py-2 rounded-lg text-xs font-mono font-semibold bg-navy-800 text-slate-300 hover:text-white border border-slate-700 transition-all";
+                }
+            });
+        }
+
+        // =========================================================================
+        // 3. BASE DE DATOS DE ARTÍCULOS Y FICHAS TEMÁTICAS (SECCIÓN 6.1 Y 10)
+        // =========================================================================
+        const articlesData = [
+            {
+                id: 1,
+                category: "Narrativas que nos juegan",
+                month: "Mes 2 // Serie Destacada",
+                title: "¿Quién decide cuando eliges en un videojuego?",
+                games: "The Witcher 3, Detroit: Become Human, Undertale",
+                question: "¿Elegiste tú o el juego ya había decidido qué podías elegir?",
+                summary: "Analizamos cómo las bifurcaciones narrativas producen una poderosa sensación de agencia ética, aun cuando sus consecuencias están acotadas por el código.",
+                evidence: "En títulos como Undertale o The Witcher 3, el sistema recuerda acciones que el jugador creía rutinarias o subconvencionales, confrontándolo horas después con el peso moral de sus hábitos.",
+                context: "Desde la teoría literaria y la filosofía de la acción, jugar implica un pacto hermenéutico: no necesitamos libertad infinita para experimentar responsabilidad moral; basta con que la elección transforme nuestra comprensión de la obra.",
+                biblio: "Bogost, I. (2007). Persuasive Games. MIT Press. / Sicart, M. (2009). The Ethics of Computer Games.",
+                communityPrompt: "¿Qué videojuego te hizo soltar el control unos segundos antes de tomar una decisión difícil?"
+            },
+            {
+                id: 2,
+                category: "Mundos con historia",
+                month: "Mes 3 y Mes 5 // Archivo Web",
+                title: "Ruinas que hablan: Memoria, territorio y narrativa ambiental",
+                games: "Hollow Knight, Shadow of the Colossus, Dark Souls",
+                question: "¿Cómo cuenta una historia un mundo cuando ningún personaje te la explica con palabras?",
+                summary: "Exploramos la arquitectura, la arqueología digital y los objetos abandonados como vehículos de memoria histórica y duelo colectivo.",
+                evidence: "En lugar de largas cinemáticas expositivas, el diseño de niveles dispone estatuas erosionadas, inscripciones fragmentarias y geografías interconectadas que invitan al jugador a reconstruir el pasado como un historiador.",
+                context: "La geografía cultural y los estudios de la memoria muestran que el espacio nunca es un escenario neutro: habitar un territorio virtual es leer las huellas del poder, el olvido y la resistencia.",
+                biblio: "Jenkins, H. (2004). Game Design as Narrative Architecture. / Nora, P. (1989). Les Lieux de Mémoire.",
+                communityPrompt: "¿Qué escenario o ciudad de un videojuego sientes que tiene más historia oculta en sus rincones?"
+            },
+            {
+                id: 3,
+                category: "La sociedad en pantalla",
+                month: "Mes 4 // Análisis Comparativo",
+                title: "Espejos digitales: Identidad, género y representación social",
+                games: "Celeste, Disco Elysium, Life is Strange, Cyberpunk 2077",
+                question: "¿Quiénes tienen voz protagónica en los mundos virtuales y cómo se representan nuestras luchas cotidianas?",
+                summary: "Un recorrido crítico por la evolución de la representación de identidades, salud mental, desigualdad y comunidad en el videojuego contemporáneo.",
+                evidence: "En Celeste, la mecánica misma de escalar una montaña traduce corporalmente la ansiedad y el diálogo interno de su protagonista, integrando identidad y jugabilidad sin recurrir a estereotipos.",
+                context: "Los estudios culturales advierten que la representación no es una simple cuota estética: define qué experiencias humanas se consideran dignas de empatía y protagonismo en el imaginario colectivo.",
+                biblio: "Shaw, A. (2014). Gaming at the Edge: Sexuality and Gender at the Margins of Gamer Culture.",
+                communityPrompt: "¿Con qué personaje de videojuego te has sentido genuinamente representado o comprendido?"
+            },
+            {
+                id: 4,
+                category: "Detrás del control",
+                month: "Mes 8 y Mes 9 // Diseño y Emoción",
+                title: "El lenguaje de la dificultad: Cuando fallar también es parte del relato",
+                games: "Hades, Returnal, Papers, Please, Gris",
+                question: "¿Qué significa realmente la pantalla de 'Game Over' cuando el fracaso se integra en la historia?",
+                summary: "Examinamos cómo los procesos creativos y las mecánicas de repetición, tensión o escasez comunican emociones que el cine o la literatura no pueden replicar.",
+                evidence: "En Papers, Please, la presión burocrática y los errores de revisión no son fallos del jugador, sino el mecanismo exacto mediante el cual la obra denuncia la deshumanización fronteriza.",
+                context: "La estética de la recepción aplicada al medio interactivo demuestra que la fricción mecánica —el esfuerzo, el ritmo y la pausa— es una forma de lenguaje poético y político.",
+                biblio: "Juul, J. (2013). The Art of Failure: An Essay on the Pain of Playing Video Games. MIT Press.",
+                communityPrompt: "¿Qué videojuego logró emocionarte a través de sus controles o mecánicas más que por sus diálogos?"
+            },
+            {
+                id: 5,
+                category: "La sociedad en pantalla",
+                month: "Mes 10 // Especial Temático",
+                title: "Terror, mito y sociedad: Nuestros miedos colectivos frente a la pantalla",
+                games: "Silent Hill 2, Signalis, Alan Wake, Detention",
+                question: "¿Por qué el terror en los videojuegos nos inquieta de un modo distinto al cine?",
+                summary: "Del folclore tradicional a la culpa psicológica: analizamos cómo el terror interactivo refleja ansiedades históricas, duelos no resueltos y mitos culturales.",
+                evidence: "En Detention o Silent Hill 2, los monstruos y laberintos no son amenazas externas azarosas, sino materializaciones simbólicas de traumas políticos, censura o culpa moral.",
+                context: "A diferencia del espectador pasivo, en el videojuego de terror somos nosotros quienes debemos avanzar por el pasillo oscuro: la complicidad motora intensifica la catarsis simbólica.",
+                biblio: "Perron, B. (2018). The World of Scary Video Games: A Study in Videoludic Horror.",
+                communityPrompt: "¿Cuál es el momento de terror psicológico en un juego que más te ha dejado pensando?"
+            },
+            {
+                id: 6,
+                category: "Comunidad crítica",
+                month: "Mes 6 y Mes 11 // Educación y Debate",
+                title: "Más allá del karma binario: Ética, educación y diálogo en comunidades de juego",
+                games: "Fallout: New Vegas, Mass Effect, Baldur's Gate 3",
+                question: "¿Pueden los videojuegos funcionar como laboratorios éticos y herramientas pedagógicas en el aula?",
+                summary: "Ficha colaborativa y recurso descargable para estudiantes y docentes sobre cómo debatir dilemas morales sin caer en medidores simplistas de 'bueno o malo'.",
+                evidence: "Cuando los juegos abandonan la barra numérica de karma y presentan facciones con intereses históricos complejos, obligan a la comunidad a debatir con argumentos políticos y filosóficos.",
+                context: "En las humanidades digitales, el videojuego se consolida como un texto cultural vivo capaz de detonar pensamiento crítico, lectura comparada y cultura de paz entre jóvenes.",
+                biblio: "Gee, J. P. (2003). What Video Games Have to Teach Us About Learning and Literacy.",
+                communityPrompt: "¿Qué videojuego recomendarías utilizar en una clase de historia, ética o literatura?"
+            }
+        ];
+
+        let activeCategory = 'todas';
+
+        function renderArticles() {
+            const searchQuery = document.getElementById('archiveSearchInput').value.toLowerCase().trim();
+            const grid = document.getElementById('articlesGrid');
+
+            const filtered = articlesData.filter(art => {
+                const matchesCat = activeCategory === 'todas' || art.category === activeCategory;
+                const matchesQuery = !searchQuery || 
+                    art.title.toLowerCase().includes(searchQuery) ||
+                    art.games.toLowerCase().includes(searchQuery) ||
+                    art.summary.toLowerCase().includes(searchQuery) ||
+                    art.category.toLowerCase().includes(searchQuery);
+                return matchesCat && matchesQuery;
+            });
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full hud-frame rounded-2xl p-8 text-center space-y-3">
+                        <p class="text-slate-300 font-semibold">No se encontraron fichas con ese criterio de búsqueda.</p>
+                        <button onclick="resetFilters()" class="px-4 py-2 rounded-xl bg-cyber-500 text-navy-950 font-mono text-xs font-bold">
+                            Mostrar todo el archivo
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = filtered.map(art => `
+                <article class="hud-frame rounded-2xl p-6 flex flex-col justify-between hover:border-cyber-400 transition-all group cursor-pointer" onclick="openArticleModal(${art.id})">
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between gap-2 text-[11px] font-mono">
+                            <span class="px-2.5 py-0.5 rounded bg-quest-500/20 text-quest-300 border border-quest-400/30">
+                                ${art.category}
+                            </span>
+                            <span class="text-slate-400">${art.month}</span>
+                        </div>
+
+                        <h3 class="text-xl font-bold text-white group-hover:text-cyber-400 transition-colors leading-snug">
+                            ${art.title}
+                        </h3>
+
+                        <p class="text-xs font-mono text-cyber-300">
+                            Obras: ${art.games}
+                        </p>
+
+                        <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                            ${art.summary}
+                        </p>
+                    </div>
+
+                    <div class="mt-6 pt-4 border-t border-slate-800 flex items-center justify-between text-xs font-mono">
+                        <span class="text-quest-300 truncate max-w-[70%]">${art.question}</span>
+                        <span class="text-cyber-400 font-bold group-hover:translate-x-1 transition-transform">
+                            Leer ficha ▶
+                        </span>
+                    </div>
+                </article>
+            `).join('');
+        }
+
+        function setCategoryFilter(category) {
+            activeCategory = category;
+            const buttons = document.querySelectorAll('.cat-btn');
+            buttons.forEach(btn => {
+                if (btn.getAttribute('data-cat') === category) {
+                    btn.className = "cat-btn p-3.5 rounded-xl bg-cyber-500 text-navy-950 font-bold text-left transition-all border border-cyber-400";
+                } else {
+                    btn.className = "cat-btn p-3.5 rounded-xl bg-navy-800/90 hover:bg-navy-700 text-slate-200 text-left transition-all border border-slate-700";
+                }
+            });
+            renderArticles();
+        }
+
+        function filterArticles() {
+            renderArticles();
+        }
+
+        function resetFilters() {
+            document.getElementById('archiveSearchInput').value = '';
+            setCategoryFilter('todas');
+        }
+
+        function openArticleModal(id) {
+            const art = articlesData.find(a => a.id === id);
+            if (!art) return;
+            document.getElementById('modalCategoryBadge').textContent = `${art.category.toUpperCase()} // ${art.month.toUpperCase()}`;
+            document.getElementById('modalTitle').textContent = art.title;
+            document.getElementById('modalGames').textContent = `Obras analizadas: ${art.games}`;
+            document.getElementById('modalQuestion').textContent = art.question;
+            document.getElementById('modalEvidence').textContent = art.evidence;
+            document.getElementById('modalContext').textContent = art.context;
+            document.getElementById('modalBiblio').textContent = art.biblio;
+            document.getElementById('modalCommunityPrompt').textContent = art.communityPrompt;
+
+            const modal = document.getElementById('articleModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeArticleModal() {
+            const modal = document.getElementById('articleModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function jumpToCommunityFromModal() {
+            closeArticleModal();
+            document.getElementById('comunidad').scrollIntoView({ behavior: 'smooth' });
+            document.getElementById('commentText').focus();
+        }
+
+        // =========================================================================
+        // 4. ESCALETA BASE DE 7 PASOS (SECCIÓN 15)
+        // =========================================================================
+        const escaletaSteps = [
+            {
+                badge: "[ PASO 01 DE 07 // APERTURA ]",
+                title: "1. Gancho o pregunta filosófica inicial",
+                desc: "Toda cápsula y artículo inicia con una pregunta concreta que conecta la experiencia inmediata de jugar con una inquietud humana o social, captando la atención en los primeros segundos sin recurrir al sensacionalismo.",
+                example: "«¿Elegiste tú o el juego ya había decidido qué podías elegir?»"
+            },
+            {
+                badge: "[ PASO 02 DE 07 // DELIMITACIÓN ]",
+                title: "2. Presentación del caso",
+                desc: "Se introduce de manera clara y breve el videojuego, la escena o la mecánica específica que servirá como punto de partida, sin exigir que la audiencia haya jugado previamente la obra completa.",
+                example: "«Cuando un RPG detiene el tiempo y nos muestra dos caminos morales aparentemente opuestos...»"
+            },
+            {
+                badge: "[ PASO 03 DE 07 // MARCO TEÓRICO ACCESIBLE ]",
+                title: "3. Contexto humanístico",
+                desc: "Traducimos herramientas de la filosofía, la teoría literaria, la historia, la estética o la sociología a un lenguaje claro y cercano para jóvenes de 16 a 35 años.",
+                example: "«En narrativa interactiva llamamos a esto 'agencia ilusoria' y 'retórica procedimental': las reglas comunican ideas.»"
+            },
+            {
+                badge: "[ PASO 04 DE 07 // DEMOSTRACIÓN ]",
+                title: "4. Evidencia tomada del videojuego",
+                desc: "Se muestra un ejemplo visual o mecánico concreto dentro del juego que sustenta el análisis: un diálogo, el diseño de un escenario, una regla del sistema o una bifurcación narrativa.",
+                example: "«Observa cómo ambas opciones de diálogo conducen al mismo evento, pero cambian el tono emocional del protagonista.»"
+            },
+            {
+                badge: "[ PASO 05 DE 07 // LECTURA CRÍTICA ]",
+                title: "5. Interpretación cultural y social",
+                desc: "Conectamos la evidencia del juego con problemas de la vida cultural y social contemporánea: cómo entendemos la libertad, la identidad, la memoria, el poder o la comunidad.",
+                example: "«El juego convierte una regla programada en una experiencia ética que cuestiona nuestra propia idea de libertad.»"
+            },
+            {
+                badge: "[ PASO 06 DE 07 // SÍNTESIS ]",
+                title: "6. Conclusión abierta",
+                desc: "Sintetizamos el hallazgo central sin cerrar la conversación de forma dogmática, recordando que interpretar una obra enriquece la experiencia de jugarla.",
+                example: "«Una elección importa cuando cambia lo que comprendemos del personaje, del mundo o de nosotros mismos.»"
+            },
+            {
+                badge: "[ PASO 07 DE 07 // INTERACCIÓN ]",
+                title: "7. Pregunta a la comunidad y retorno al calendario",
+                desc: "Cerramos invitando a la audiencia a compartir su propia experiencia argumentada. Las respuestas más reflexivas alimentan las video-respuestas semanales y los artículos del sitio web.",
+                example: "«¿Qué juego te hizo dudar de una decisión? Cuéntalo y analicémoslo más allá del Game Over.»"
+            }
+        ];
+
+        function selectEscaletaStep(index) {
+            const item = escaletaSteps[index];
+            document.getElementById('escDetailBadge').textContent = item.badge;
+            document.getElementById('escDetailTitle').textContent = item.title;
+            document.getElementById('escDetailDesc').textContent = item.desc;
+            document.getElementById('escDetailExample').textContent = item.example;
+
+            for (let i = 0; i < 7; i++) {
+                const btn = document.getElementById('escBtn' + i);
+                if (i === index) {
+                    btn.className = "p-3 rounded-xl border border-cyber-400 bg-cyber-500/20 text-left transition-all";
+                } else {
+                    btn.className = "p-3 rounded-xl border border-slate-700 bg-navy-800/80 hover:bg-navy-700 text-left transition-all";
+                }
+            }
+        }
+
+        // =========================================================================
+        // 5. CALENDARIZACIÓN ANUAL DE 12 MESES (SECCIÓN 10)
+        // =========================================================================
+        const calendarMonths = [
+            { month: 1, stage: 1, axis: "Presentación del proyecto", product: "Video manifiesto y encuesta inicial" },
+            { month: 2, stage: 1, axis: "Narrativa y decisiones", product: "Serie de tres cápsulas" },
+            { month: 3, stage: 1, axis: "Construcción de mundos", product: "Demo mejorado y primer artículo" },
+            { month: 4, stage: 2, axis: "Identidad y representación", product: "Análisis comparativo" },
+            { month: 5, stage: 2, axis: "Memoria e historia", product: "Cápsula y ficha web" },
+            { month: 6, stage: 2, axis: "Ética y elección", product: "Encuesta y debate moderado" },
+            { month: 7, stage: 2, axis: "Comunidades de juego", product: "Colaboración con creador" },
+            { month: 8, stage: 2, axis: "Videojuego independiente", product: "Entrevista o reseña cultural" },
+            { month: 9, stage: 3, axis: "Diseño y emoción", product: "Serie audiovisual" },
+            { month: 10, stage: 3, axis: "Terror, mito y sociedad", product: "Especial temático" },
+            { month: 11, stage: 3, axis: "Educación y videojuegos", product: "Recurso descargable" },
+            { month: 12, stage: 3, axis: "Balance del año", product: "Informe, selección y transmisión en vivo" }
+        ];
+
+        function filterCalendarStage(stage) {
+            const stages = ['all', 1, 2, 3];
+            stages.forEach(s => {
+                const btn = document.getElementById('stageBtn-' + s);
+                if (s === stage) {
+                    btn.className = "px-3 py-1.5 rounded-lg text-xs font-mono font-semibold bg-cyber-500 text-navy-950 transition-all";
+                } else {
+                    btn.className = "px-3 py-1.5 rounded-lg text-xs font-mono font-semibold text-slate-300 hover:text-white transition-all";
+                }
+            });
+
+            const filtered = stage === 'all' ? calendarMonths : calendarMonths.filter(m => m.stage === stage);
+            const grid = document.getElementById('calendarGrid');
+
+            grid.innerHTML = filtered.map(item => {
+                const badgeColor = item.stage === 1 ? 'text-cyber-400 border-cyber-400/30 bg-cyber-500/10' :
+                                   item.stage === 2 ? 'text-quest-300 border-quest-400/30 bg-quest-500/10' :
+                                                      'text-emerald-300 border-emerald-400/30 bg-emerald-500/10';
+                return `
+                    <div class="p-4 rounded-xl bg-navy-800/80 border border-slate-700/80 hover:border-cyber-400/50 transition-all flex flex-col justify-between space-y-3">
+                        <div class="flex items-center justify-between text-xs font-mono">
+                            <span class="font-bold text-white">MES ${String(item.month).padStart(2, '0')}</span>
+                            <span class="px-2 py-0.5 rounded border text-[10px] ${badgeColor}">ETAPA ${item.stage}</span>
+                        </div>
+                        <div>
+                            <span class="text-[11px] font-mono text-slate-400 block">EJE PRINCIPAL:</span>
+                            <h4 class="font-bold text-white text-base">${item.axis}</h4>
+                        </div>
+                        <div class="pt-2 border-t border-slate-700/60">
+                            <span class="text-[11px] font-mono text-cyber-400 block">PRODUCTO DESTACADO:</span>
+                            <p class="text-xs text-slate-200 font-medium">${item.product}</p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // =========================================================================
+        // 6. COMUNIDAD CRÍTICA: ENCUESTA EN TIEMPO REAL Y COMENTARIOS
+        // =========================================================================
+        const pollData = [
+            { id: 0, title: "Memoria histórica y ruinas en mundos abiertos", line: "Mundos con historia", votes: 62 },
+            { id: 1, title: "El trabajo y la distopía corporativa en juegos indie", line: "La sociedad en pantalla", votes: 49 },
+            { id: 2, title: "¿Por qué nos duele traicionar a un NPC?", line: "Narrativas que nos juegan", votes: 37 }
+        ];
+        let userHasVoted = false;
+
+        function renderPoll() {
+            const totalVotes = pollData.reduce((acc, item) => acc + item.votes, 0);
+            document.getElementById('pollTotalVotes').textContent = `${totalVotes} votos registrados`;
+
+            const container = document.getElementById('pollOptionsContainer');
+            container.innerHTML = pollData.map(opt => {
+                const pct = Math.round((opt.votes / totalVotes) * 100);
+                return `
+                    <button onclick="castPollVote(${opt.id})" class="w-full text-left p-3.5 rounded-xl bg-navy-900 hover:bg-navy-800 border border-slate-700 hover:border-cyber-400 transition-all space-y-2">
+                        <div class="flex items-center justify-between text-xs font-mono">
+                            <span class="text-quest-300">[${opt.line}]</span>
+                            <span class="text-cyber-400 font-bold">${pct}% (${opt.votes})</span>
+                        </div>
+                        <div class="text-sm font-semibold text-white">${opt.title}</div>
+                        <div class="w-full h-2 rounded-full bg-navy-950 overflow-hidden">
+                            <div class="h-full bg-gradient-to-r from-cyber-500 to-quest-500 transition-all duration-500" style="width: ${pct}%"></div>
+                        </div>
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function castPollVote(id) {
+            pollData[id].votes += 1;
+            renderPoll();
+            const msg = document.getElementById('pollFeedbackMsg');
+            msg.classList.remove('hidden');
+        }
+
+        const communityComments = [
+            {
+                author: "Valeria G. (Estudiante de Letras)",
+                game: "NieR: Automata (Final E)",
+                time: "Hace 2 horas",
+                text: "Cuando el juego te pregunta si de verdad quieres borrar tu partida guardada para ayudar a un desconocido en el mundo real a superar los créditos finales. No ganas ningún trofeo, pero entiendes que la solidaridad existe incluso a través de una pantalla."
+            },
+            {
+                author: "Marco Antonio R.",
+                game: "Papers, Please",
+                time: "Hace 1 día",
+                text: "Dejar pasar a una persona sin papeles sabiendo que la multa reducirá el presupuesto para la medicina de tu familia dentro del juego. Te hace reflexionar cómo los sistemas burocráticos convierten la empatía en un lujo."
+            },
+            {
+                author: "Elena C. (Docente de Historia)",
+                game: "The Witcher 3: Wild Hunt",
+                time: "Hace 3 días",
+                text: "En el arco del Barón Sanguinario ninguna opción es 'la buena'. Esa ambigüedad moral me sirvió muchísimo para explicar a mis alumnos que las consecuencias históricas rara vez son blancas o negras."
+            }
+        ];
+
+        function renderComments() {
+            const list = document.getElementById('commentsList');
+            list.innerHTML = communityComments.map(c => `
+                <div class="p-4 rounded-xl bg-navy-900/90 border border-slate-700/80 space-y-2">
+                    <div class="flex flex-wrap items-center justify-between gap-2 text-xs font-mono">
+                        <span class="text-white font-bold">${c.author}</span>
+                        <span class="px-2 py-0.5 rounded bg-quest-500/20 text-quest-300 border border-quest-400/30">
+                            Obra: ${c.game}
+                        </span>
+                    </div>
+                    <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                        "${c.text}"
+                    </p>
+                    <div class="text-[11px] font-mono text-slate-500 flex items-center justify-between pt-1">
+                        <span>${c.time}</span>
+                        <span class="text-cyber-400">✓ Seleccionable para video-respuesta semanal</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function submitCommunityComment(e) {
+            e.preventDefault();
+            const authorInput = document.getElementById('commentAuthor');
+            const gameInput = document.getElementById('commentGame');
+            const textInput = document.getElementById('commentText');
+
+            if (!authorInput.value.trim() || !gameInput.value.trim() || !textInput.value.trim()) return;
+
+            communityComments.unshift({
+                author: authorInput.value.trim(),
+                game: gameInput.value.trim(),
+                time: "Justo ahora",
+                text: textInput.value.trim()
+            });
+
+            renderComments();
+            authorInput.value = '';
+            gameInput.value = '';
+            textInput.value = '';
+        }
+
+        // =========================================================================
+        // 7. MODALES Y MENÚ MÓVIL
+        // =========================================================================
+        function openManifestoModal() {
+            const modal = document.getElementById('manifestoModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeManifestoModal() {
+            const modal = document.getElementById('manifestoModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('hidden');
+        }
+
+        // Inicialización al cargar la página
+        window.onload = function () {
+            setScriptStep(0);
+            renderArticles();
+            filterCalendarStage('all');
+            renderPoll();
+            renderComments();
+        };
+    </script>
+</body>
+</html>
